@@ -61,14 +61,17 @@ class ClassSessionStatus(str, enum.Enum):
 
 
 class MeetingIntegrationStatus(str, enum.Enum):
-    """Google Meet wiring state.
+    """How a class session's meeting link came to exist.
 
-    Stays NOT_CONFIGURED until a Google Workspace account exists. While in that
-    state `class_sessions.meeting_url` remains NULL — no placeholder link is
-    ever generated.
+    NOT_CONFIGURED means no link exists and none may be stored — a database
+    CHECK enforces that, so the platform can never invent one.
+
+    MANUAL means a person created a real link inside Google Meet and pasted it
+    in. Genuine link, no Workspace required.
     """
 
     NOT_CONFIGURED = "not_configured"
+    MANUAL = "manual"
     PENDING = "pending"
     ACTIVE = "active"
     FAILED = "failed"
