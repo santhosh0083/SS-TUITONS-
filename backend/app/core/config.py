@@ -37,6 +37,12 @@ class Settings(BaseSettings):
     cookie_secure: bool = False
     cookie_samesite: Literal["lax", "strict", "none"] = "lax"
 
+    # ---- Messaging ----
+    # AES-256-GCM key for message bodies at rest. The server can decrypt, by
+    # design, so admins can review conversations for child safety. This is NOT
+    # end-to-end encryption and must never be described as such.
+    message_encryption_key: str = ""
+
     # ---- Redis / rate limiting ----
     redis_url: str = "redis://localhost:6379/0"
     rate_limit_login_per_minute: int = 5
