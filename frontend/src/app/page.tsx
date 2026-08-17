@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Header } from "@/components/site/Header";
 import { Reveal } from "@/components/site/Reveal";
+import { Testimonials } from "@/components/site/Testimonials";
 import { site, whatsappLink } from "@/lib/site";
 
 /*
@@ -242,6 +243,9 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+
+        {/* ---------------- Reviews ---------------- */}
+        <Testimonials />
 
         {/* ---------------- Contact ---------------- */}
         <section id="contact" className="bg-navy-900 py-20">
