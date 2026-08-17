@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.errors import register_exception_handlers
-from app.api.v1 import auth, health
+from app.api.v1 import admin, auth, health
 from app.core.config import get_settings
 from app.db.session import engine
 
@@ -45,6 +45,7 @@ register_exception_handlers(app)
 
 app.include_router(health.router, prefix="/api/v1", tags=["health"])
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(admin.router, prefix="/api/v1/admin", tags=["admin"])
 
 
 @app.get("/", tags=["health"])

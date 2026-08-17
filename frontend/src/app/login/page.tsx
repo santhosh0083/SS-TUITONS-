@@ -60,17 +60,17 @@ export default function LoginPage() {
 
         <div className="max-w-md animate-[var(--animate-fade-up)]">
           <h1 className="text-4xl font-semibold leading-tight tracking-tight text-white">
-            Focused preparation for Grade 11 &amp; 12.
+            Home &amp; online tuition, Grade 1 to 12.
           </h1>
           <p className="mt-5 text-[15px] leading-relaxed text-navy-200">
-            JEE, NEET, EAMCET, IPE and SAT — small batches and one-to-one
-            teaching, with progress you can actually see.
+            Every subject, taught by IIT tutors and professional teachers — with
+            progress you can actually see.
           </p>
 
           <ul className="mt-10 space-y-3.5">
             {[
               "Live classes with IIT tutors",
-              "Topic-wise tests and worksheets",
+              "Flexible timings, affordable fees",
               "Attendance and progress for parents",
             ].map((item, i) => (
               <li
