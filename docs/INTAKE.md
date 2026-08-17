@@ -32,13 +32,13 @@ Real secrets (API keys, client secrets) go into a `.env` file that is never comm
 
 | Field | Your answer |
 |---|---|
-| Business phone number (with country code) | |
+| Business phone number (with country code) | +91 77998 91976 |
 | Alternate phone number | |
-| WhatsApp number (if different from above) | |
-| Business email | |
+| WhatsApp number (if different from above) | same number — **confirm it is on WhatsApp** |
+| Business email | sstuitions42@gmail.com |
 | Support / enquiry email (if different) | |
 | Website domain (owned, or planned) | |
-| Instagram URL | |
+| Instagram URL | https://instagram.com/ss_tuitions_ |
 | Facebook URL | |
 | YouTube URL | |
 | LinkedIn URL | |
@@ -53,11 +53,11 @@ Real secrets (API keys, client secrets) go into a `.env` file that is never comm
 
 | Field | Your answer |
 |---|---|
-| Country | |
-| State | |
-| City | |
-| Full address | |
-| Pincode | |
+| Country | India |
+| State | Telangana |
+| City | Hyderabad |
+| Full address | Kokapet, Hyderabad |
+| Pincode | 500075 |
 | Google Maps link | |
 | Show the physical address publicly? (yes / no) | |
 | Are **online** classes offered? | |
@@ -221,8 +221,8 @@ Batches assigned:
 ## Progress
 
 - [ ] Group A — Business
-- [ ] Group B — Contact
-- [ ] Group C — Location
+- [x] Group B — Contact *(hours + other socials still open)*
+- [x] Group C — Location *(exact street address + Maps link still open)*
 - [ ] Group D — Courses
 - [ ] Group E — Fees
 - [ ] Group F — Payment

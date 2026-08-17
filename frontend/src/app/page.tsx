@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Header } from "@/components/site/Header";
 import { Reveal } from "@/components/site/Reveal";
+import { site, whatsappLink } from "@/lib/site";
 
 /*
   Public homepage.
@@ -11,12 +12,10 @@ import { Reveal } from "@/components/site/Reveal";
   names. Those are either not true yet or are private, and inventing them
   becomes a liability the moment a parent asks.
 
-  Contact details and fees stay CONFIGURE_ME until the owner supplies them
-  (docs/INTAKE.md, Groups B and E).
+  Contact details come from lib/site.ts. Fees are not shown at all until the
+  owner supplies them (docs/INTAKE.md Group E) — a wrong number on a public
+  page is worse than no number.
 */
-
-const CONTACT_PHONE = "CONFIGURE_ME";
-const CONTACT_EMAIL = "CONFIGURE_ME";
 
 const HIGHLIGHTS = [
   {
@@ -258,29 +257,75 @@ export default function HomePage() {
 
               <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <a
-                  href={`tel:${CONTACT_PHONE}`}
-                  className="inline-flex h-12 w-full items-center justify-center rounded-lg bg-gold-500 px-6 text-sm font-semibold text-navy-950 transition-all duration-150 hover:-translate-y-px hover:bg-gold-400 sm:w-auto"
+                  href={whatsappLink()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-gold-500 px-6 text-sm font-semibold text-navy-950 transition-all duration-150 hover:-translate-y-px hover:bg-gold-400 sm:w-auto"
                 >
-                  Call {CONTACT_PHONE}
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M17.5 14.4c-.3-.2-1.7-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.7 1-.9 1.2-.2.2-.3.2-.6.1-1.7-.9-2.9-1.6-4-3.6-.3-.5.3-.5.8-1.5.1-.2 0-.4 0-.5s-.7-1.6-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.2.2 2.1 3.2 5.1 4.5 1.9.8 2.6.9 3.5.7.6-.1 1.7-.7 1.9-1.3.2-.7.2-1.2.2-1.3-.1-.2-.3-.2-.5-.3zM12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z" />
+                  </svg>
+                  WhatsApp us
                 </a>
                 <a
-                  href={`mailto:${CONTACT_EMAIL}`}
+                  href={`tel:${site.phone.e164}`}
                   className="inline-flex h-12 w-full items-center justify-center rounded-lg border border-white/20 px-6 text-sm font-medium text-white transition-all duration-150 hover:-translate-y-px hover:bg-white/10 sm:w-auto"
                 >
-                  {CONTACT_EMAIL}
+                  Call {site.phone.display}
                 </a>
               </div>
+
+              <p className="mt-7 text-sm text-navy-300">
+                <a
+                  href={`mailto:${site.email}`}
+                  className="underline decoration-navy-500 underline-offset-4 transition-colors hover:text-white"
+                >
+                  {site.email}
+                </a>
+                <span className="mx-2.5 text-navy-500">·</span>
+                {site.address.full}
+              </p>
             </Reveal>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-ink-200 bg-white py-8">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 text-sm text-ink-500 sm:flex-row">
-          <span className="font-semibold text-navy-900">
-            SS <span className="text-gold-600">TUITIONS</span>
-          </span>
-          <span>© {new Date().getFullYear()} SS Tuitions. All rights reserved.</span>
+      <footer className="border-t border-ink-200 bg-white py-10">
+        <div className="mx-auto max-w-6xl px-5">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <span className="font-semibold text-navy-900">
+                SS <span className="text-gold-600">TUITIONS</span>
+              </span>
+              <p className="mt-2 text-sm text-ink-500">{site.address.full}</p>
+            </div>
+
+            <div className="flex flex-col gap-2 text-sm text-ink-600 sm:items-end">
+              <a href={`tel:${site.phone.e164}`} className="hover:text-navy-900">
+                {site.phone.display}
+              </a>
+              <a href={`mailto:${site.email}`} className="hover:text-navy-900">
+                {site.email}
+              </a>
+              {site.social.instagram && (
+                <a
+                  href={site.social.instagram.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 hover:text-navy-900"
+                >
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 2c2.7 0 3.1 0 4.1.06 1 .05 1.7.2 2.3.44a4.6 4.6 0 0 1 1.7 1.1 4.6 4.6 0 0 1 1.1 1.7c.24.6.4 1.3.44 2.3.05 1 .06 1.4.06 4.1s0 3.1-.06 4.1c-.05 1-.2 1.7-.44 2.3a4.9 4.9 0 0 1-2.8 2.8c-.6.24-1.3.4-2.3.44-1 .05-1.4.06-4.1.06s-3.1 0-4.1-.06c-1-.05-1.7-.2-2.3-.44a4.9 4.9 0 0 1-2.8-2.8c-.24-.6-.4-1.3-.44-2.3C2.01 15.1 2 14.7 2 12s0-3.1.06-4.1c.05-1 .2-1.7.44-2.3a4.6 4.6 0 0 1 1.1-1.7 4.6 4.6 0 0 1 1.7-1.1c.6-.24 1.3-.4 2.3-.44C8.9 2.01 9.3 2 12 2Zm0 1.8c-2.67 0-2.99.01-4 .06-.78.03-1.2.16-1.48.27-.37.14-.64.32-.92.6-.28.28-.46.55-.6.92-.11.28-.24.7-.27 1.48-.05 1.01-.06 1.33-.06 4s.01 2.99.06 4c.03.78.16 1.2.27 1.48.14.37.32.64.6.92.28.28.55.46.92.6.28.11.7.24 1.48.27 1.01.05 1.33.06 4 .06s2.99-.01 4-.06c.78-.03 1.2-.16 1.48-.27.37-.14.64-.32.92-.6.28-.28.46-.55.6-.92.11-.28.24-.7.27-1.48.05-1.01.06-1.33.06-4s-.01-2.99-.06-4c-.03-.78-.16-1.2-.27-1.48a2.5 2.5 0 0 0-.6-.92 2.5 2.5 0 0 0-.92-.6c-.28-.11-.7-.24-1.48-.27-1.01-.05-1.33-.06-4-.06Zm0 3.06a5.14 5.14 0 1 1 0 10.28 5.14 5.14 0 0 1 0-10.28Zm0 1.8a3.34 3.34 0 1 0 0 6.68 3.34 3.34 0 0 0 0-6.68Zm5.34-3.2a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4Z" />
+                  </svg>
+                  @{site.social.instagram.handle}
+                </a>
+              )}
+            </div>
+          </div>
+
+          <p className="mt-8 border-t border-ink-200 pt-6 text-center text-sm text-ink-500">
+            © {new Date().getFullYear()} SS Tuitions. All rights reserved.
+          </p>
         </div>
       </footer>
     </>

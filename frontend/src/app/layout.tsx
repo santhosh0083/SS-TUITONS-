@@ -10,11 +10,28 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "SS Tuitions",
+    default: "SS Tuitions — Home & Online Tuition in Hyderabad, Grade 1 to 12",
     template: "%s · SS Tuitions",
   },
   description:
-    "Online tutoring for Grade 11 and 12 — JEE, NEET, EAMCET, IPE and SAT preparation.",
+    "Home and online tuition for Grades 1 to 12 in Kokapet, Hyderabad. All subjects, " +
+    "IIT tutors and professional teachers, flexible timings and affordable fees. " +
+    "JEE, NEET, EAMCET, IPE and SAT preparation.",
+  keywords: [
+    "tuition Hyderabad",
+    "home tuition Kokapet",
+    "online tuition Grade 1 to 12",
+    "IIT tutors Hyderabad",
+    "JEE NEET EAMCET coaching",
+  ],
+  openGraph: {
+    title: "SS Tuitions — Home & Online Tuition in Hyderabad",
+    description:
+      "Grades 1 to 12, all subjects. IIT tutors and professional teachers, " +
+      "flexible timings, affordable fees.",
+    locale: "en_IN",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
