@@ -21,6 +21,23 @@ class UserStatus(str, enum.Enum):
 
 
 class Grade(str, enum.Enum):
+    """Grades 1-12.
+
+    Grades 1-10 were added in migration 0002 when the business expanded from
+    Grade 11-12 exam coaching to home and online tuition across all school
+    years. Enum order matches numeric order, so sorting works naturally.
+    """
+
+    GRADE_1 = "1"
+    GRADE_2 = "2"
+    GRADE_3 = "3"
+    GRADE_4 = "4"
+    GRADE_5 = "5"
+    GRADE_6 = "6"
+    GRADE_7 = "7"
+    GRADE_8 = "8"
+    GRADE_9 = "9"
+    GRADE_10 = "10"
     GRADE_11 = "11"
     GRADE_12 = "12"
 
