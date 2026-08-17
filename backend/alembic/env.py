@@ -27,9 +27,10 @@ def _database_url() -> str:
     url = settings.database_direct_url or settings.database_url
     if not url:
         raise RuntimeError(
-            "No database URL configured. Set DATABASE_DIRECT_URL in .env "
-            "(Supabase dashboard -> Project Settings -> Database -> "
-            "Connection string -> Direct connection)."
+            "No database URL configured. Set DATABASE_DIRECT_URL in .env using "
+            "the Supabase SESSION POOLER host (aws-0-<region>.pooler.supabase.com "
+            "on port 5432). Do not use db.<ref>.supabase.co: that host is "
+            "IPv6-only and fails to resolve on IPv4-only networks."
         )
     # Alembic runs synchronously; strip any async driver suffix.
     return url.replace("+asyncpg", "+psycopg")

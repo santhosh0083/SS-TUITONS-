@@ -33,13 +33,20 @@ cp .env.example .env
 
 Then fill in `.env`. The two values needed right now:
 
-**`DATABASE_DIRECT_URL`** — Supabase dashboard → Project `ss-tuitions` → Project Settings → Database → Connection string → **Direct connection**. It looks like:
+**`DATABASE_DIRECT_URL`** and **`DATABASE_URL`** — already filled in except the password. Both use the **Session Pooler**:
 
 ```
-postgresql+psycopg://postgres:YOUR-PASSWORD@db.iycurjblbydkjtuavhfr.supabase.co:5432/postgres
+postgresql+psycopg://postgres.iycurjblbydkjtuavhfr:YOUR-PASSWORD@aws-0-ap-south-1.pooler.supabase.com:5432/postgres
 ```
 
-Use the **Direct** connection, not the pooler — DDL does not run reliably through a transaction pooler.
+> **Use the pooler, not the direct connection.** Supabase's direct host
+> (`db.<ref>.supabase.co`) is **IPv6-only** — it publishes no A record at all.
+> On any network without IPv6 it fails with
+> `socket.gaierror: [Errno 11001] getaddrinfo failed`, which looks like a
+> credentials problem but is not. The pooler resolves over IPv4.
+>
+> Port **5432** is session mode, which supports DDL and migrations. Port 6543 is
+> transaction mode and needs extra driver settings — avoid it for now.
 
 **`JWT_SECRET`** — generate a fresh one:
 
