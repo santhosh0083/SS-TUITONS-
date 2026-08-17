@@ -1,0 +1,167 @@
+@import "tailwindcss";
+
+/*
+  SS TUITIONS DESIGN SYSTEM
+  -------------------------
+  Premium + academic. Deep navy carries authority (parents are the ones paying),
+  amber marks action without shouting. No gradients, no decorative colour.
+
+  Semantic tokens only — components never reference a raw hex. Rebranding means
+  editing this block, not hunting through 200 files.
+*/
+
+@theme {
+  /* --- Brand: navy --- */
+  --color-navy-50: #f0f4f9;
+  --color-navy-100: #dbe4f0;
+  --color-navy-200: #b9cae1;
+  --color-navy-300: #8ba7cd;
+  --color-navy-400: #5b7fb4;
+  --color-navy-500: #3d6199;
+  --color-navy-600: #2e4c7d;
+  --color-navy-700: #263e66;
+  --color-navy-800: #1d2f4d;
+  --color-navy-900: #14213d;
+  --color-navy-950: #0b1526;
+
+  /* --- Accent: amber --- */
+  --color-gold-50: #fdf8ed;
+  --color-gold-100: #f9eccc;
+  --color-gold-200: #f3d795;
+  --color-gold-300: #ecbd5e;
+  --color-gold-400: #e5a33a;
+  --color-gold-500: #d9871f;
+  --color-gold-600: #b96a18;
+  --color-gold-700: #944e18;
+  --color-gold-800: #7a3f1a;
+  --color-gold-900: #683519;
+
+  /* --- Neutrals --- */
+  --color-ink-50: #f8f9fa;
+  --color-ink-100: #f1f3f5;
+  --color-ink-200: #e6e8eb;
+  --color-ink-300: #d3d7dc;
+  --color-ink-400: #a2a9b3;
+  --color-ink-500: #6f7785;
+  --color-ink-600: #515966;
+  --color-ink-700: #3b424d;
+  --color-ink-800: #262b33;
+  --color-ink-900: #171a20;
+
+  /* --- Status. Never colour alone: always paired with an icon or label, so
+         the ~8% of boys with colour-vision deficiency are not excluded. --- */
+  --color-success-50: #eef7f0;
+  --color-success-500: #2f855a;
+  --color-success-700: #22633f;
+  --color-warning-50: #fdf6e7;
+  --color-warning-500: #c47f17;
+  --color-warning-700: #97620f;
+  --color-danger-50: #fdeeee;
+  --color-danger-500: #c53434;
+  --color-danger-700: #9b2626;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* Elevation: tight and low-opacity. Heavy shadows read as cheap. */
+  --shadow-card: 0 1px 2px rgb(20 33 61 / 0.04), 0 2px 8px rgb(20 33 61 / 0.06);
+  --shadow-lifted: 0 2px 4px rgb(20 33 61 / 0.05), 0 8px 24px rgb(20 33 61 / 0.1);
+
+  /* Motion. Short and eased — UI should feel responsive, not animated. */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-fade-up: fade-up 0.4s var(--ease-out-soft) both;
+  --animate-fade-in: fade-in 0.3s var(--ease-out-soft) both;
+  --animate-scale-in: scale-in 0.2s var(--ease-out-soft) both;
+  --animate-shake: shake 0.4s ease-in-out;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+/* Used only on a failed sign-in: an error the user must notice. */
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  40% {
+    transform: translateX(5px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--color-ink-50);
+    color: var(--color-ink-800);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /*
+    Visible keyboard focus everywhere. Students take timed tests — some will
+    navigate by keyboard, and an invisible focus ring makes that impossible.
+  */
+  :focus-visible {
+    outline: 2px solid var(--color-gold-500);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: var(--color-navy-900);
+    color: white;
+  }
+}
+
+/*
+  Respect the OS "reduce motion" setting. This is an accessibility requirement,
+  not a nicety: motion triggers nausea and migraine for people with vestibular
+  disorders.
+*/
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
