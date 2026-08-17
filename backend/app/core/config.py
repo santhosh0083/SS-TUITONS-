@@ -51,12 +51,26 @@ class Settings(BaseSettings):
     storage_signed_url_ttl_seconds: int = 300
 
     # ---- AI ----
+    # "gemini" = Google AI Studio free tier (1,500 requests/day, no card).
+    # "anthropic" = Claude, paid. Empty disables all AI features cleanly.
+    ai_provider: str = ""
+
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-2.0-flash"
+
     anthropic_api_key: str = ""
     ai_model_tutor: str = "claude-sonnet-5"
     ai_model_question_gen: str = "claude-opus-5"
     ai_model_vision: str = "claude-sonnet-5"
+
     voyage_api_key: str = ""
     embedding_dimensions: int = 1024
+
+    # Students are minors and free tiers may train on submitted data, so
+    # identifiers are stripped before anything is sent. Turning this off is a
+    # deliberate act, not an accident.
+    ai_strip_identifiers: bool = True
+    ai_daily_message_limit_per_student: int = 40
 
     # ---- Google Meet (inactive until Workspace is available) ----
     google_integration_enabled: bool = False
