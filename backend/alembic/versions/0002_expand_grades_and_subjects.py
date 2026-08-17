@@ -16,6 +16,8 @@ Revises: 0001
 
 from collections.abc import Sequence
 
+import sqlalchemy as sa
+
 from alembic import op
 
 revision: str = "0002"
@@ -43,11 +45,16 @@ def upgrade() -> None:
         for grade in NEW_GRADES:
             op.execute(f"ALTER TYPE grade ADD VALUE IF NOT EXISTS '{grade}' BEFORE '11'")
 
+    # Bound parameters rather than f-strings. These particular values are
+    # hardcoded constants, so nothing is exploitable today, but a migration is
+    # exactly the kind of file someone later edits to read from a CSV.
+    bind = op.get_bind()
+    insert_subject = sa.text(
+        "INSERT INTO subjects (code, name, is_active) "
+        "VALUES (:code, :name, true) ON CONFLICT (code) DO NOTHING"
+    )
     for code, name in NEW_SUBJECTS:
-        op.execute(
-            "INSERT INTO subjects (code, name, is_active) "
-            f"VALUES ('{code}', '{name}', true) ON CONFLICT (code) DO NOTHING"
-        )
+        bind.execute(insert_subject, {"code": code, "name": name})
 
 
 def downgrade() -> None:
