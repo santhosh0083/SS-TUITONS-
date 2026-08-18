@@ -13,13 +13,26 @@ interface ModalProps {
 export function Modal({ open, title, description, onClose, children }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
 
+  // onClose is usually an inline arrow function, so it is a new value on every
+  // render of the parent. Holding it in a ref keeps it out of the effect
+  // dependencies below.
+  //
+  // This mattered: with `onClose` in the deps, every keystroke in a form field
+  // re-ran the effect, which called panelRef.focus() and pulled focus out of
+  // the input. Typing was impossible after the first character.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
   // Escape closes, and the page behind must not scroll while a dialog is open —
   // otherwise on mobile the background slides around under your finger.
+  // Depends on `open` alone, so it runs once per open/close, not per keystroke.
   useEffect(() => {
     if (!open) return;
 
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     };
     document.addEventListener("keydown", onKey);
 
@@ -27,14 +40,18 @@ export function Modal({ open, title, description, onClose, children }: ModalProp
     document.body.style.overflow = "hidden";
 
     // Move focus into the dialog so keyboard and screen-reader users are not
-    // left behind on the page underneath.
-    panelRef.current?.focus();
+    // left behind on the page underneath. Focus the first field if there is
+    // one, so the user can start typing immediately.
+    const firstField = panelRef.current?.querySelector<HTMLElement>(
+      "input:not([type=hidden]), textarea, select",
+    );
+    (firstField ?? panelRef.current)?.focus();
 
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = previousOverflow;
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
