@@ -27,8 +27,12 @@ EXPOSE 8000
 
 # The host's load balancer checks this; a failed database connection surfaces
 # as "not ready" rather than a restart loop.
+#
+# The port must come from $PORT, not a literal: Render (and most container
+# hosts) assign the port at run time, so a hardcoded 8000 would probe a port
+# nothing is listening on and report a healthy container as unhealthy.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-    CMD curl -fsS http://localhost:8000/api/v1/health || exit 1
+    CMD curl -fsS "http://localhost:${PORT:-8000}/api/v1/health" || exit 1
 
 # Migrations run at start-up so a deploy cannot serve a schema it does not
 # match. If the migration fails the container refuses to start, which is the
