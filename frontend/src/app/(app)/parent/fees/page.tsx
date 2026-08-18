@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
@@ -213,13 +212,11 @@ export default function ParentFeesPage() {
                 with, so a failed image must not block payment. */}
             {details.qr_image_url && !qrFailed && (
               <div className="flex flex-col items-center">
-                <Image
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={details.qr_image_url}
                   alt="UPI QR code for SS Tuitions"
-                  width={220}
-                  height={220}
-                  className="rounded-lg border border-ink-200"
-                  unoptimized
+                  className="h-56 w-56 rounded-lg border border-ink-200 object-contain"
                   onError={() => setQrFailed(true)}
                 />
                 <p className="mt-3 text-sm text-ink-600">
