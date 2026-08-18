@@ -128,6 +128,36 @@ async def list_exams(session: Db, _admin: AdminUser) -> list[dict]:
     return [{"id": str(r.id), "code": r.code, "name": r.name} for r in rows]
 
 
+@router.get("/subjects", response_model=list[dict])
+async def list_subjects(session: Db, _admin: AdminUser) -> list[dict]:
+    """Subject options for the assignment form."""
+    from sqlalchemy import select
+
+    from app.models.academics import Subject
+
+    rows = (
+        await session.execute(
+            select(Subject.id, Subject.code, Subject.name)
+            .where(Subject.is_active.is_(True))
+            .order_by(Subject.name)
+        )
+    ).all()
+    return [{"id": str(r.id), "code": r.code, "name": r.name} for r in rows]
+
+
+@router.post("/users/{user_id}/reset-password", response_model=dict)
+async def reset_password(user_id: uuid.UUID, session: Db, admin: AdminUser) -> dict:
+    """Issue a new temporary password. Shown once; all sessions are revoked."""
+    try:
+        full_name, email, password = await people_service.reset_password(
+            session, user_id=user_id, actor_id=admin.id
+        )
+    except PeopleError as exc:
+        raise _bad_request(exc) from exc
+    await session.commit()
+    return {"full_name": full_name, "email": email, "temporary_password": password}
+
+
 @router.delete("/students/{student_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def not_implemented_delete(student_id: uuid.UUID) -> None:
     """Deliberately not implemented.
