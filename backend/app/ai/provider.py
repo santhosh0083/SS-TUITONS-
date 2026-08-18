@@ -13,6 +13,7 @@ Providers:
 Nothing here ever receives a student's name — callers pass scrubbed text only.
 """
 
+import asyncio
 import json
 import logging
 from abc import ABC, abstractmethod
@@ -89,16 +90,41 @@ class GeminiProvider(AIProvider):
             body["generationConfig"]["responseMimeType"] = "application/json"
 
         url = f"{self.BASE}/models/{self._model}:generateContent"
-        try:
-            async with httpx.AsyncClient(timeout=90) as client:
-                r = await client.post(
-                    url, params={"key": self._key}, json=body
-                )
-        except httpx.HTTPError as exc:
-            raise AIError(f"Could not reach Gemini: {type(exc).__name__}") from exc
+
+        # The free tier returns 503 "high demand" fairly often, and a transient
+        # blip should not surface to a student as a failure. Retry briefly
+        # before giving up. 429 is NOT retried — that is a real quota limit and
+        # hammering it makes things worse.
+        r = None
+        for attempt in range(3):
+            try:
+                async with httpx.AsyncClient(timeout=90) as client:
+                    r = await client.post(url, params={"key": self._key}, json=body)
+            except httpx.HTTPError as exc:
+                if attempt == 2:
+                    raise AIError(
+                        f"Could not reach Gemini: {type(exc).__name__}"
+                    ) from exc
+                await asyncio.sleep(1.5 * (attempt + 1))
+                continue
+
+            if r.status_code == 503 and attempt < 2:
+                logger.info("Gemini busy (503), retrying in %.1fs", 1.5 * (attempt + 1))
+                await asyncio.sleep(1.5 * (attempt + 1))
+                continue
+            break
+
+        if r is None:
+            raise AIError("Could not reach Gemini")
 
         if r.status_code == 429:
-            raise AIError("Gemini free-tier rate limit reached. Try again shortly.")
+            raise AIError(
+                "Today's free AI limit has been reached. It resets tomorrow."
+            )
+        if r.status_code == 503:
+            raise AIError(
+                "The AI tutor is very busy right now. Please try again in a moment."
+            )
         if r.status_code >= 400:
             # Never surface the body: it can echo the prompt back.
             raise AIError(f"Gemini returned HTTP {r.status_code}")
@@ -110,8 +136,23 @@ class GeminiProvider(AIProvider):
             raise AIError("Gemini returned no answer for that request")
 
         parts = candidates[0].get("content", {}).get("parts") or []
-        text = "".join(p.get("text", "") for p in parts).strip()
+        # Gemini 3 models reason internally and may return those thoughts as
+        # parts flagged `thought: true`. That is the model's scratch work, not
+        # its answer — showing it to a student would leak the reasoning they
+        # are supposed to be doing themselves.
+        text = "".join(
+            p.get("text", "") for p in parts if not p.get("thought")
+        ).strip()
         usage = data.get("usageMetadata", {})
+
+        if not text:
+            # Everything came back as thinking with no answer, usually because
+            # maxOutputTokens was exhausted before the reply began.
+            finish = candidates[0].get("finishReason")
+            raise AIError(
+                f"Gemini returned no usable answer (finishReason={finish}). "
+                "Try increasing max_tokens."
+            )
 
         return AIResponse(
             text=text,

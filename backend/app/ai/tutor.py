@@ -234,7 +234,11 @@ async def ask(
         response = await provider.complete(
             system=_system_prompt(grade=student.grade.value, subject=subject),
             prompt=prompt,
-            max_tokens=1200,
+            # Generous, because Gemini 3 spends most of this budget on internal
+            # reasoning before writing anything: a measured call used 671
+            # thinking tokens to produce 148 tokens of answer. At 1200 a longer
+            # explanation would be cut off mid-sentence.
+            max_tokens=3000,
             temperature=0.6,
         )
     except AIError as exc:
