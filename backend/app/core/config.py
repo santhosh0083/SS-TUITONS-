@@ -83,6 +83,24 @@ class Settings(BaseSettings):
     google_client_id: str = ""
     google_client_secret: str = ""
 
+    # ---- Email (free via Gmail SMTP; needs a Google App Password) ----
+    email_enabled: bool = False
+    email_smtp_host: str = "smtp.gmail.com"
+    email_smtp_port: int = 587
+    email_smtp_user: str = ""
+    email_smtp_password: str = ""
+    email_from_address: str = ""
+    email_from_name: str = "SS Tuitions"
+
+    # ---- Payments (manual UPI/QR verification; no gateway) ----
+    # Blank until the owner supplies them. Nothing is invented: the parent-facing
+    # page shows "payment details not set up yet" rather than a wrong UPI id.
+    payment_upi_id: str = ""
+    payment_payee_name: str = ""
+    payment_bank_name: str = ""
+    payment_qr_image_url: str = ""
+    payment_instructions: str = ""
+
     # ---- Security ----
     cors_allowed_origins: str = "http://localhost:3000"
     audit_log_enabled: bool = True
