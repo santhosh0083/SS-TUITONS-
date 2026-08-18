@@ -123,7 +123,16 @@
 }
 
 @layer base {
-  html {
+  /*
+    Smooth scrolling is applied ONLY to in-page anchor jumps on the marketing
+    site, never globally.
+
+    Globally it also animates the scroll the browser performs when an input
+    receives focus. Inside a tall form that makes every field change glide the
+    page around — it reads as the page "jumping" while you type, and it makes
+    long forms genuinely unpleasant to fill in.
+  */
+  html:has(> body > main > section[id]) {
     scroll-behavior: smooth;
   }
 

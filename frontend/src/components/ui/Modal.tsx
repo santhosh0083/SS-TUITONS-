@@ -42,10 +42,13 @@ export function Modal({ open, title, description, onClose, children }: ModalProp
     // Move focus into the dialog so keyboard and screen-reader users are not
     // left behind on the page underneath. Focus the first field if there is
     // one, so the user can start typing immediately.
+    // preventScroll matters: without it the browser scrolls the focused field
+    // into view, which on a tall form moves the page the moment the dialog
+    // opens. The dialog is already in view; nothing needs to move.
     const firstField = panelRef.current?.querySelector<HTMLElement>(
       "input:not([type=hidden]), textarea, select",
     );
-    (firstField ?? panelRef.current)?.focus();
+    (firstField ?? panelRef.current)?.focus({ preventScroll: true });
 
     return () => {
       document.removeEventListener("keydown", onKey);
