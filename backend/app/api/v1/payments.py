@@ -25,12 +25,20 @@ AdminUser = Annotated[User, Depends(require_admin)]
 
 class PaymentDetails(BaseModel):
     """How to pay. Empty fields mean the owner has not supplied them yet, and
-    the UI says so rather than showing a wrong UPI id."""
+    the UI says so rather than showing a wrong UPI id.
+
+    Bank details are receive-only: an account number and IFSC let someone send
+    money in, not take it out. They are shown to signed-in parents so a NEFT
+    transfer is possible, and to nobody else.
+    """
 
     configured: bool
     upi_id: str | None
     payee_name: str | None
+    phone_number: str | None
     bank_name: str | None
+    account_number: str | None
+    ifsc: str | None
     qr_image_url: str | None
     instructions: str | None
 
@@ -112,7 +120,10 @@ async def payment_details(_user: CurrentUser) -> PaymentDetails:
         configured=bool(upi and payee),
         upi_id=upi,
         payee_name=payee,
+        phone_number=_real(s.payment_phone_number),
         bank_name=_real(s.payment_bank_name),
+        account_number=_real(s.payment_account_number),
+        ifsc=_real(s.payment_ifsc),
         qr_image_url=_real(s.payment_qr_image_url),
         instructions=_real(s.payment_instructions),
     )

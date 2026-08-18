@@ -98,6 +98,9 @@ class Settings(BaseSettings):
     payment_upi_id: str = ""
     payment_payee_name: str = ""
     payment_bank_name: str = ""
+    payment_account_number: str = ""
+    payment_ifsc: str = ""
+    payment_phone_number: str = ""
     payment_qr_image_url: str = ""
     payment_instructions: str = ""
 
