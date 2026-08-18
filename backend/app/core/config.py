@@ -117,11 +117,48 @@ class Settings(BaseSettings):
     def is_production(self) -> bool:
         return self.app_env == "production"
 
+    @property
+    def is_cross_site(self) -> bool:
+        """True when the website and API sit on different sites.
+
+        Browsers compare registrable domain, not port. Vercel + Render is
+        cross-site; ss-tuitions.com + api.ss-tuitions.com is not.
+
+        This matters because a SameSite=lax cookie is NOT sent on cross-site
+        requests: login succeeds, then the session cannot be restored and the
+        user bounces back to the login page. That exact bug appeared in
+        development when the frontend called 127.0.0.1 from localhost.
+        """
+        from urllib.parse import urlparse
+
+        def registrable(url: str) -> str:
+            host = urlparse(url).hostname or ""
+            parts = host.split(".")
+            return ".".join(parts[-2:]) if len(parts) >= 2 else host
+
+        return registrable(self.frontend_base_url) != registrable(
+            self.backend_base_url
+        )
+
     def assert_production_safe(self) -> None:
         """Fail fast rather than boot production with development defaults."""
         if not self.is_production:
             return
         problems: list[str] = []
+
+        # A cross-site deployment needs SameSite=none, and browsers reject
+        # SameSite=none unless the cookie is also Secure. Booting without this
+        # produces a login that appears to work and then silently fails.
+        if self.is_cross_site and self.cookie_samesite != "none":
+            problems.append(
+                "The website and API are on different domains, so "
+                "COOKIE_SAMESITE must be 'none' or sign-in will not persist"
+            )
+        if self.cookie_samesite == "none" and not self.cookie_secure:
+            problems.append(
+                "COOKIE_SAMESITE=none requires COOKIE_SECURE=true; browsers "
+                "reject the cookie otherwise"
+            )
         if len(self.jwt_secret) < 32:
             problems.append("JWT_SECRET must be at least 32 characters in production")
         if not self.cookie_secure:
