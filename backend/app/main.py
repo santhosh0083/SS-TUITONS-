@@ -10,6 +10,7 @@ from app.api.errors import register_exception_handlers
 from app.api.v1 import (
     admin,
     ai,
+    attendance,
     auth,
     health,
     messages,
@@ -60,6 +61,9 @@ app.include_router(messages.router, prefix="/api/v1/messages", tags=["messages"]
 app.include_router(scheduling.router, prefix="/api/v1", tags=["scheduling"])
 app.include_router(ai.router, prefix="/api/v1/ai", tags=["ai"])
 app.include_router(payments.router, prefix="/api/v1/payments", tags=["payments"])
+app.include_router(
+    attendance.router, prefix="/api/v1/attendance", tags=["attendance"]
+)
 
 
 @app.get("/", tags=["health"])
