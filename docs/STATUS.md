@@ -113,6 +113,23 @@ before a lesson. ~₹600/month removes it.
 
 ---
 
+## Prove it still works
+
+Creates real accounts, tests every stated requirement against the running API,
+then deletes what it made. 32 checks.
+
+```bash
+cd C:/dev/ss-tuitions/backend
+```
+
+```bash
+$env:SS_VERIFY_EMAIL="santhu77998@gmail.com"; $env:SS_VERIFY_PASSWORD="your-password"; ./.venv/Scripts/python -m scripts.verify_requirements
+```
+
+Expect `32/32 requirements verified` and `test data left behind: 0`.
+
+---
+
 ## Useful commands
 
 ```bash
