@@ -1,0 +1,112 @@
+# Render Blueprint — creates the SS Tuitions API service with one click.
+#
+# Use it via Render → New → Blueprint → connect this repository.
+# Everything non-secret is filled in below. The six values marked
+# `sync: false` are prompted for during setup, so no secret is ever committed.
+#
+# The database lives in Supabase (ap-south-1, Mumbai), so Singapore is the
+# closest Render region and keeps query latency low.
+
+services:
+  - type: web
+    name: ss-tuitions-api
+    runtime: docker
+    repo: https://github.com/santhosh0083/SS-TUITONS-
+    branch: main
+    region: singapore
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+
+    # Render restarts the container if this stops answering. It does not touch
+    # the database, so a database blip cannot cause a restart loop.
+    healthCheckPath: /api/v1/health
+
+    envVars:
+      # ---- Core ----
+      - key: APP_ENV
+        value: production
+      - key: APP_NAME
+        value: SS Tuitions
+      - key: APP_TIMEZONE
+        value: Asia/Kolkata
+
+      # A long-running container, so the normal connection pool is correct.
+      # (SERVERLESS=true is only for Vercel/Lambda-style hosting.)
+      - key: SERVERLESS
+        value: "false"
+
+      # ---- URLs and cross-site cookies ----
+      # The website (Vercel) and API (Render) are different domains, so the
+      # refresh cookie must be SameSite=none + Secure or sign-in will not
+      # persist. The app refuses to boot if these are wrong.
+      - key: FRONTEND_BASE_URL
+        value: https://ss-tuitons.vercel.app
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://ss-tuitons.vercel.app
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: COOKIE_SAMESITE
+        value: none
+      - key: FORCE_HTTPS
+        value: "true"
+      # Render provides its own URL; set after the first deploy.
+      - key: BACKEND_BASE_URL
+        sync: false
+
+      # ---- AI tutor ----
+      - key: AI_PROVIDER
+        value: gemini
+      - key: GEMINI_MODEL
+        value: gemini-3.6-flash
+      - key: AI_STRIP_IDENTIFIERS
+        value: "true"
+
+      # ---- Email (Gmail SMTP) ----
+      - key: EMAIL_ENABLED
+        value: "true"
+      - key: EMAIL_SMTP_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_SMTP_PORT
+        value: "587"
+      - key: EMAIL_SMTP_USER
+        value: sstuitions42@gmail.com
+      - key: EMAIL_FROM_ADDRESS
+        value: sstuitions42@gmail.com
+      - key: EMAIL_FROM_NAME
+        value: SS Tuitions
+
+      # ---- Payments (receive-only details; shown to signed-in parents) ----
+      - key: PAYMENT_UPI_ID
+        value: 7799891976@axl
+      - key: PAYMENT_PAYEE_NAME
+        value: Guguloth Santhosh
+      - key: PAYMENT_PHONE_NUMBER
+        value: "7799891976"
+      - key: PAYMENT_BANK_NAME
+        value: State Bank of India
+      - key: PAYMENT_ACCOUNT_NUMBER
+        value: "42019056315"
+      - key: PAYMENT_IFSC
+        value: SBIN0021933
+      - key: PAYMENT_QR_IMAGE_URL
+        value: /payment-qr.jpg
+      - key: PAYMENT_INSTRUCTIONS
+        value: >-
+          Scan the QR with PhonePe, Google Pay or Paytm, or pay to UPI
+          7799891976@axl. After paying, come back here and tap "I have paid"
+          with the transaction reference.
+
+      # ---- Secrets: Render prompts for these; never committed ----
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_DIRECT_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: MESSAGE_ENCRYPTION_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: EMAIL_SMTP_PASSWORD
+        sync: false

@@ -55,10 +55,6 @@ async def app(scope, receive, send):
     """ASGI wrapper that repairs the request path, then delegates to FastAPI."""
     if scope.get("type") == "http":
         path = scope.get("path", "")
-        # Diagnostic hatch: always answers, whatever the routing is doing.
-        if "__whoami" in path or b"__whoami" in (scope.get("query_string") or b""):
-            await _echo(scope, send)
-            return
         if path.startswith(_REWRITTEN):
             recovered = _recover_path(scope)
             if recovered:
@@ -76,40 +72,6 @@ async def app(scope, receive, send):
                     ),
                 )
     await fastapi_app(scope, receive, send)
-
-
-async def _echo(scope, send) -> None:
-    """Report exactly what this function received.
-
-    Temporary. Every route 404s in production, which means FastAPI is being
-    handed a path it does not recognise and none of the headers guessed at in
-    _ORIGINAL_PATH_HEADERS carried the original. Rather than guess a fourth
-    time, this returns the raw scope so the truth is visible in one request.
-    """
-    import json
-
-    payload = json.dumps(
-        {
-            "received_path": scope.get("path"),
-            "raw_path": (scope.get("raw_path") or b"").decode("latin-1"),
-            "root_path": scope.get("root_path"),
-            "query_string": (scope.get("query_string") or b"").decode("latin-1"),
-            "headers": {
-                k.decode("latin-1"): v.decode("latin-1")
-                for k, v in (scope.get("headers") or [])
-            },
-        },
-        indent=1,
-    ).encode()
-
-    await send(
-        {
-            "type": "http.response.start",
-            "status": 200,
-            "headers": [[b"content-type", b"application/json"]],
-        }
-    )
-    await send({"type": "http.response.body", "body": payload})
 
 
 __all__ = ["app"]
