@@ -58,3 +58,10 @@ warn_unused_ignores = true
 warn_redundant_casts = true
 no_implicit_optional = true
 plugins = []
+
+# pgvector ships no py.typed marker, so mypy cannot see inside it. The import
+# itself is real and required (app/models/ai_ml.py uses Vector for embeddings);
+# only the type information is missing.
+[[tool.mypy.overrides]]
+module = ["pgvector.*"]
+ignore_missing_imports = true

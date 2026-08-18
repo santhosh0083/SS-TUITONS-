@@ -9,14 +9,17 @@
 
 services:
   - type: web
-    name: ss-tuitions-api
+    name: ss-tuitons
     runtime: docker
     repo: https://github.com/santhosh0083/SS-TUITONS-
     branch: main
     region: singapore
     plan: free
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
+    # rootDir makes every other path relative to backend/, which is where the
+    # Dockerfile and application live. Setting dockerContext instead caused
+    # Render to look for backend/backend/Dockerfile and fail.
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
 
     # Render restarts the container if this stops answering. It does not touch
     # the database, so a database blip cannot cause a restart loop.
