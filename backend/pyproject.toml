@@ -20,6 +20,9 @@ ignore = [
 # S105/S106 flag hardcoded credentials. In tests these are dummy fixture
 # values, never real secrets.
 "tests/*" = ["S105", "S106"]
+# Local verification script: every URL it opens is a hardcoded localhost
+# address, so the "audit URL open" rule adds nothing here.
+"scripts/verify_requirements.py" = ["S310"]
 
 [tool.mypy]
 python_version = "3.12"

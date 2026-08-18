@@ -9,7 +9,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai import tutor
 from app.ai.provider import is_configured
-from app.ai.tutor import DailyLimitReached, TutorError, TutorUnavailable
+from app.ai.tutor import (
+    DailyLimitReached,
+    NotAStudent,
+    TutorError,
+    TutorUnavailable,
+)
 from app.auth.dependencies import CurrentUser
 from app.db.session import get_db
 
@@ -85,6 +90,10 @@ async def ask(payload: AskRequest, session: Db, user: CurrentUser) -> AskRespons
     except TutorUnavailable as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)
+        ) from exc
+    except NotAStudent as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)
         ) from exc
     except DailyLimitReached as exc:
         raise HTTPException(

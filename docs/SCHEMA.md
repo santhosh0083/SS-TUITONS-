@@ -1,6 +1,12 @@
 # SS TUITIONS — Database Schema v1 (for review)
 
-**Status: PROPOSED — nothing has been applied to the database.**
+**Status: APPLIED AND LIVE.** This schema is running on the Supabase
+project in `ap-south-1` (Mumbai), at Alembic revision `0004`.
+
+Originally written as a proposal for review; kept as the design record.
+Later migrations extended it: grades 1-12 and more subjects (`0002`),
+manually-supplied Google Meet links (`0003`), and audit-log anonymisation
+on user deletion (`0004`).
 
 Target: PostgreSQL 17 (Supabase, `ap-south-1`) + `pgvector`.
 **49 tables** across 9 domains, 30 enum types, 48 indexes, 7 integrity triggers.

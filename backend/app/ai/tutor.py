@@ -54,6 +54,15 @@ class DailyLimitReached(TutorError):
     pass
 
 
+class NotAStudent(TutorError):
+    """Caller is not a student.
+
+    Distinct from a bad request: the caller is understood and refused, so
+    the API answers 403 rather than 400. A wrong status code sends whoever
+    debugs this next looking for a malformed payload.
+    """
+
+
 def _system_prompt(*, grade: str, subject: str | None) -> str:
     subject_line = f"The student is asking about {subject}." if subject else ""
     return f"""You are a patient tutor for SS Tuitions, an Indian tutoring service.
@@ -119,7 +128,7 @@ async def _student_for_user(session: AsyncSession, user: User) -> Student:
         await session.execute(select(Student).where(Student.user_id == user.id))
     ).scalar_one_or_none()
     if student is None:
-        raise TutorError("The AI tutor is available to students only.")
+        raise NotAStudent("The AI tutor is available to students only.")
     return student
 
 

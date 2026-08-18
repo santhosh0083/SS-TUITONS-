@@ -18,10 +18,8 @@ const NAV_BY_ROLE: Record<string, NavItem[]> = {
     { href: "/admin/students", label: "Students", icon: <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-8 8a8 8 0 0 1 16 0" /> },
     { href: "/admin/parents", label: "Parents", icon: <path d="M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2 20a6 6 0 0 1 12 0m-2-9a6 6 0 0 1 10 9" /> },
     { href: "/admin/tutors", label: "Tutors", icon: <path d="M12 3 2 8l10 5 10-5-10-5Zm0 9.5L5 9v4.5c0 2 3.1 3.5 7 3.5s7-1.5 7-3.5V9" /> },
-    { href: "/admin/batches", label: "Batches", icon: <path d="M4 6h16M4 12h16M4 18h16" /> },
     { href: "/admin/classes", label: "Classes", icon: <path d="M8 2v4m8-4v4M3 9h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" /> },
     { href: "/admin/attendance", label: "Attendance", icon: <path d="M9 11l3 3 7-7M20 12v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h9" /> },
-    { href: "/admin/content", label: "Study material", icon: <path d="M4 4h9l7 7v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm9 0v7h7" /> },
     { href: "/admin/payments", label: "Fees", icon: <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm3-12H10.5a2 2 0 0 0 0 4h3a2 2 0 0 1 0 4H9" /> },
     { href: "/messages", label: "Messages", icon: <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10Z" /> },
   ],
@@ -38,8 +36,6 @@ const NAV_BY_ROLE: Record<string, NavItem[]> = {
   STUDENT: [
     { href: "/student", label: "Today", icon: <path d="M8 2v4m8-4v4M3 9h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" /> },
     { href: "/student/tutor", label: "AI Tutor", icon: <path d="M12 3 2 8l10 5 10-5-10-5Zm0 9.5L5 9v4.5c0 2 3.1 3.5 7 3.5s7-1.5 7-3.5V9" /> },
-    { href: "/student/material", label: "Study material", icon: <path d="M4 4h9l7 7v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm9 0v7h7" /> },
-    { href: "/student/tests", label: "Tests", icon: <path d="M9 11l3 3 7-7M20 12v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h9" /> },
   ],
 };
 
