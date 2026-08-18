@@ -36,6 +36,7 @@ const NAV_BY_ROLE: Record<string, NavItem[]> = {
   ],
   STUDENT: [
     { href: "/student", label: "Today", icon: <path d="M8 2v4m8-4v4M3 9h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" /> },
+    { href: "/student/tutor", label: "AI Tutor", icon: <path d="M12 3 2 8l10 5 10-5-10-5Zm0 9.5L5 9v4.5c0 2 3.1 3.5 7 3.5s7-1.5 7-3.5V9" /> },
     { href: "/student/material", label: "Study material", icon: <path d="M4 4h9l7 7v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Zm9 0v7h7" /> },
     { href: "/student/tests", label: "Tests", icon: <path d="M9 11l3 3 7-7M20 12v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h9" /> },
   ],

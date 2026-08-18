@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.errors import register_exception_handlers
-from app.api.v1 import admin, auth, health, messages, people, scheduling
+from app.api.v1 import admin, ai, auth, health, messages, people, scheduling
 from app.core.config import get_settings
 from app.db.session import engine
 
@@ -49,6 +49,7 @@ app.include_router(admin.router, prefix="/api/v1/admin", tags=["admin"])
 app.include_router(people.router, prefix="/api/v1/admin", tags=["people"])
 app.include_router(messages.router, prefix="/api/v1/messages", tags=["messages"])
 app.include_router(scheduling.router, prefix="/api/v1", tags=["scheduling"])
+app.include_router(ai.router, prefix="/api/v1/ai", tags=["ai"])
 
 
 @app.get("/", tags=["health"])
