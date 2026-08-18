@@ -10,10 +10,12 @@ attendance and billing path as a group, with no parallel system to maintain.
 
 import uuid
 from datetime import UTC, date, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.models.academics import (
     Batch,
     BatchStudent,
@@ -276,17 +278,26 @@ async def schedule_class(
 def _join_state(
     row: ClassSession, now: datetime
 ) -> tuple[bool, str | None]:
-    """Whether the JOIN button should work, and if not, why."""
+    """Whether the JOIN button should work, and if not, why.
+
+    Class times are entered in the business's local timezone (Asia/Kolkata),
+    so they must be interpreted there, not in UTC. Treating a 10:32 PM IST
+    class as 10:32 PM UTC would open the join window 5.5 hours late — which is
+    exactly the bug this replaced.
+    """
     if row.status == ClassSessionStatus.CANCELLED:
         return False, "This class was cancelled."
     if not row.meeting_url:
         return False, "The class link has not been added yet."
 
-    start = datetime.combine(row.scheduled_date, row.scheduled_start, tzinfo=UTC)
-    end = datetime.combine(row.scheduled_date, row.scheduled_end, tzinfo=UTC)
+    tz = ZoneInfo(get_settings().app_timezone)
+    start = datetime.combine(row.scheduled_date, row.scheduled_start, tzinfo=tz)
+    end = datetime.combine(row.scheduled_date, row.scheduled_end, tzinfo=tz)
 
     if now < start - JOIN_OPENS_BEFORE:
-        return False, f"Opens at {(start - JOIN_OPENS_BEFORE).strftime('%I:%M %p')}."
+        # Show the opening time in the local timezone the parent recognises.
+        opens = (start - JOIN_OPENS_BEFORE).astimezone(tz)
+        return False, f"Opens at {opens.strftime('%I:%M %p')}."
     if now > end + JOIN_CLOSES_AFTER:
         return False, "This class has finished."
     return True, None
