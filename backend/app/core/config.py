@@ -29,6 +29,11 @@ class Settings(BaseSettings):
     db_pool_size: int = 10
     db_max_overflow: int = 5
 
+    # True on Vercel/Lambda-style hosting: use NullPool and disable
+    # asyncpg prepared statements, which a transaction pooler cannot
+    # support. Set SERVERLESS=true in that environment.
+    serverless: bool = False
+
     # ---- Auth ----
     jwt_secret: str = ""
     jwt_algorithm: str = "HS256"
