@@ -101,6 +101,55 @@ async def _create_user(
     return user, password
 
 
+async def reset_password(
+    session: AsyncSession, *, user_id: uuid.UUID, actor_id: uuid.UUID
+) -> tuple[str, str, str]:
+    """Issue a new temporary password for someone who has lost theirs.
+
+    Returns (full_name, email, new_password). The plaintext is shown to the
+    admin once and never stored.
+
+    Every existing session for that user is revoked. If the password is being
+    reset because someone else had it, leaving old sessions alive would defeat
+    the point.
+    """
+    from datetime import datetime as _dt
+
+    from sqlalchemy import update
+
+    from app.models.identity import RefreshToken
+
+    user = (
+        await session.execute(select(User).where(User.id == user_id))
+    ).scalar_one_or_none()
+    if user is None:
+        raise PeopleError("That account no longer exists")
+    if user.is_superadmin and user.id != actor_id:
+        # Prevents one admin quietly taking over the owner's account.
+        raise PeopleError("The owner's password can only be reset by the owner")
+
+    password = _temp_password()
+    user.password_hash = hash_password(password)
+    user.failed_login_count = 0
+    user.locked_until = None
+
+    await session.execute(
+        update(RefreshToken)
+        .where(RefreshToken.user_id == user.id, RefreshToken.revoked_at.is_(None))
+        .values(revoked_at=_dt.now(UTC))
+    )
+
+    await audit.record(
+        session,
+        action="user.password_reset",
+        entity_type="user",
+        entity_id=user.id,
+        actor_user_id=actor_id,
+        after={"sessions_revoked": True},
+    )
+    return user.full_name, user.email, password
+
+
 async def _next_admission_no(session: AsyncSession) -> str:
     """Sequential per year, e.g. SS-2026-0007."""
     year = datetime.now(UTC).year
