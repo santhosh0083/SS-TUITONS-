@@ -8,6 +8,7 @@ a long-lived session.
 from typing import Annotated
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.dependencies import CurrentUser, client_ip
@@ -20,7 +21,7 @@ from app.schemas.auth import (
     TokenResponse,
     UserProfile,
 )
-from app.services import auth_service
+from app.services import auth_service, password_reset
 
 router = APIRouter()
 settings = get_settings()
@@ -52,6 +53,7 @@ def _profile(user) -> UserProfile:
         phone=user.phone,
         roles=sorted(r.value for r in user.role_codes),
         is_superadmin=user.is_superadmin,
+        must_change_password=user.must_change_password,
         last_login_at=user.last_login_at,
     )
 
@@ -182,3 +184,52 @@ async def change_password(
     return MessageResponse(
         detail="Password changed. Please sign in again on all devices."
     )
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(min_length=10, max_length=256)
+
+
+@router.post("/forgot-password", response_model=MessageResponse)
+async def forgot_password(
+    payload: ForgotPasswordRequest,
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> MessageResponse:
+    """Request a password-reset email.
+
+    Always returns the same message, whether or not the email has an account,
+    so this cannot be used to discover who is registered.
+    """
+    await password_reset.request_reset(session, user_email=payload.email)
+    await session.commit()
+    return MessageResponse(
+        detail=(
+            "If that email has an account, a reset link is on its way. "
+            "Check your inbox."
+        )
+    )
+
+
+@router.post("/reset-password", response_model=MessageResponse)
+async def reset_password(
+    payload: ResetPasswordRequest,
+    response: Response,
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> MessageResponse:
+    """Set a new password using a token from the reset email."""
+    try:
+        await password_reset.complete_reset(
+            session, token=payload.token, new_password=payload.new_password
+        )
+    except password_reset.ResetError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
+        ) from exc
+    await session.commit()
+    _clear_refresh_cookie(response)
+    return MessageResponse(detail="Password reset. You can now sign in.")

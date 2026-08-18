@@ -167,8 +167,9 @@ export default function LoginPage() {
           </form>
 
           <p className="mt-8 text-center text-xs leading-relaxed text-ink-500">
-            Trouble signing in? Contact SS Tuitions and we will reset your
-            password.
+            <a href="/forgot-password" className="text-navy-700 underline underline-offset-2 hover:text-navy-900">Forgot your password?</a>
+            <span className="mx-2 text-ink-300">·</span>
+            Trouble signing in? Contact SS Tuitions.
           </p>
         </div>
       </section>

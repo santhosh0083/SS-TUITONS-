@@ -132,6 +132,18 @@ async def assert_can_access(
     ):
         return False
 
+    if RoleCode.STUDENT in roles:
+        own = (
+            await session.execute(
+                select(Student.id).where(
+                    Student.user_id == user.id,
+                    Student.id == conversation.student_id,
+                )
+            )
+        ).scalar_one_or_none()
+        if own is not None:
+            return False
+
     raise NotAMember("You do not have access to this conversation")
 
 
@@ -196,6 +208,20 @@ async def get_or_create_conversation(
     for parent_user_id in parent_user_ids:
         session.add(
             ConversationMember(conversation_id=conversation.id, user_id=parent_user_id)
+        )
+
+    # The student is a member too, so they can message their own tutor. Contact
+    # details still never cross — only display names appear in any response.
+    student_user_id = (
+        await session.execute(
+            select(Student.user_id).where(Student.id == student_id)
+        )
+    ).scalar_one_or_none()
+    if student_user_id is not None:
+        session.add(
+            ConversationMember(
+                conversation_id=conversation.id, user_id=student_user_id
+            )
         )
 
     await session.flush()

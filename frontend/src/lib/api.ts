@@ -133,6 +133,7 @@ export interface UserProfile {
   phone: string | null;
   roles: string[];
   is_superadmin: boolean;
+  must_change_password: boolean;
   last_login_at: string | null;
 }
 
@@ -188,4 +189,33 @@ export interface ReadyStatus {
 
 export async function fetchReadiness(): Promise<ReadyStatus> {
   return apiFetch<ReadyStatus>("/ready");
+}
+
+
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string,
+): Promise<void> {
+  await apiFetch("/auth/change-password", {
+    method: "POST",
+    body: { current_password: currentPassword, new_password: newPassword },
+  });
+}
+
+export async function forgotPassword(email: string): Promise<string> {
+  const r = await apiFetch<{ detail: string }>("/auth/forgot-password", {
+    method: "POST",
+    body: { email },
+  });
+  return r.detail;
+}
+
+export async function resetPassword(
+  token: string,
+  newPassword: string,
+): Promise<void> {
+  await apiFetch("/auth/reset-password", {
+    method: "POST",
+    body: { token, new_password: newPassword },
+  });
 }

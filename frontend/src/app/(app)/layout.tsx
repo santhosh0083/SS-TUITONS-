@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 
 import { AppShell } from "@/components/app/AppShell";
@@ -18,12 +18,22 @@ import { AuthProvider, useAuth } from "@/lib/auth-context";
 function Guard({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
+    if (loading) return;
     // Wait for the session restore to finish, otherwise a signed-in user is
     // redirected to /login on every page refresh.
-    if (!loading && !user) router.replace("/login");
-  }, [loading, user, router]);
+    if (!user) {
+      router.replace("/login");
+      return;
+    }
+    // A person on a temporary password is held on the change-password screen
+    // and cannot reach anything else until they set their own.
+    if (user.must_change_password && pathname !== "/change-password") {
+      router.replace("/change-password");
+    }
+  }, [loading, user, router, pathname]);
 
   if (loading) {
     return (

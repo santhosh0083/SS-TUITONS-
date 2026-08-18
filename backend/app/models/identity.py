@@ -17,6 +17,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    func,
 )
 from sqlalchemy.dialects.postgresql import CITEXT, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -39,6 +40,12 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     # The owner. Bypasses every visibility scope filter.
     is_superadmin: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+    # True until the person changes the temporary password the owner gave them.
+    # Blocks the app behind a change-password screen while set.
+    must_change_password: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True
+    )
 
     # Brute-force protection
     failed_login_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
@@ -180,3 +187,22 @@ class RefreshToken(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     user_agent: Mapped[str | None] = mapped_column(String(400))
     ip_address: Mapped[str | None] = mapped_column(String(45))
+
+
+class PasswordResetToken(UUIDPrimaryKeyMixin, Base):
+    """Single-use token for the forgot-password flow. Stores only a hash."""
+
+    __tablename__ = "password_reset_tokens"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    token_hash: Mapped[str] = mapped_column(String(128), unique=True, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )

@@ -32,6 +32,7 @@ class UserProfile(BaseModel):
     phone: str | None
     roles: list[str]
     is_superadmin: bool
+    must_change_password: bool
     last_login_at: datetime | None
 
 

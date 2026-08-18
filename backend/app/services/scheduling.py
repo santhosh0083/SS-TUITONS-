@@ -275,6 +275,67 @@ async def schedule_class(
     return session_row
 
 
+async def reschedule_class(
+    session: AsyncSession,
+    *,
+    user: User,
+    class_session_id: uuid.UUID,
+    new_date: date,
+    new_start,
+    new_end,
+) -> ClassSession:
+    """Move a class to a new time.
+
+    The tutor who teaches it can do this WITHOUT the owner's approval — the new
+    timing is agreed with the parent or student in the messages first. Every
+    change is written to the audit log with the old and new times, so the owner
+    can see what happened after the fact.
+    """
+    row = (
+        await session.execute(
+            select(ClassSession).where(ClassSession.id == class_session_id)
+        )
+    ).scalar_one_or_none()
+    if row is None:
+        raise SchedulingError("That class no longer exists")
+
+    is_admin = user.is_superadmin or RoleCode.ADMIN in user.role_codes
+    if not is_admin:
+        tutor = (
+            await session.execute(select(Tutor).where(Tutor.user_id == user.id))
+        ).scalar_one_or_none()
+        if tutor is None or tutor.id != row.tutor_id:
+            raise SchedulingError("You can only reschedule your own classes")
+
+    if new_end <= new_start:
+        raise SchedulingError("The class must end after it starts")
+
+    before = {
+        "date": row.scheduled_date.isoformat(),
+        "start": row.scheduled_start.isoformat(),
+        "end": row.scheduled_end.isoformat(),
+    }
+    row.scheduled_date = new_date
+    row.scheduled_start = new_start
+    row.scheduled_end = new_end
+    await session.flush()
+
+    await audit.record(
+        session,
+        action="class.rescheduled",
+        entity_type="class_session",
+        entity_id=row.id,
+        actor_user_id=user.id,
+        before=before,
+        after={
+            "date": new_date.isoformat(),
+            "start": new_start.isoformat(),
+            "end": new_end.isoformat(),
+        },
+    )
+    return row
+
+
 def _join_state(
     row: ClassSession, now: datetime
 ) -> tuple[bool, str | None]:

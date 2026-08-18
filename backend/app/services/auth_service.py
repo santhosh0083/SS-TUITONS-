@@ -351,6 +351,8 @@ async def change_password(
         raise AuthError("New password must be different from the current one")
 
     user.password_hash = hash_password(new_password)
+    # First-login / forced change is now satisfied.
+    user.must_change_password = False
 
     await session.execute(
         update(RefreshToken)
