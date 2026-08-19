@@ -1,0 +1,31 @@
+# The build context is the repository root, but the image only needs backend/.
+# Without this, every frontend dependency and the whole git history would be
+# uploaded to the builder on each deploy.
+
+# Secrets: these must never reach an image layer. .env is gitignored, so it is
+# absent on the build host, but a local `docker build` would otherwise copy it.
+.env
+.env.*
+!.env.example
+
+# Deployed separately on Vercel.
+frontend/
+
+# Not needed to run the API.
+docs/
+.git/
+.github/
+README.md
+SETUP_DATABASE.sql
+
+# Local development artefacts.
+**/.venv/
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/node_modules/
+
+# Vercel-specific leftovers; the API is not deployed there any more.
+backend/vercel.json

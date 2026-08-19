@@ -19,7 +19,8 @@ public site. Everything needed to deploy it is ready — only a host is missing.
 
 ### What is already prepared
 
-- `backend/Dockerfile` — runs migrations at start-up, non-root user, healthcheck
+- `Dockerfile` (repository root) — runs migrations at start-up, non-root user, healthcheck.
+  It sits at the root because that is where Render's default Dockerfile Path looks.
 - `backend/README.md` — Hugging Face front matter (`sdk: docker`, `app_port: 8000`)
 - `backend/scripts/configure_hf_space.py` — pushes all 25 variables + 6 secrets
   to a HF Space in one command, reading them from `.env`

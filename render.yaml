@@ -15,19 +15,11 @@ services:
     branch: main
     region: singapore
     plan: free
-    # Both of these are relative to the REPOSITORY ROOT, not to rootDir --
-    # Render's blueprint spec is explicit about it: "The path to the service's
-    # Dockerfile, relative to the repo root." An earlier attempt set
-    # dockerfilePath to ./Dockerfile on the assumption that rootDir rebased it,
-    # which pointed at a file that does not exist at the root.
-    #
-    # rootDir is deliberately NOT set. It is documented to affect only which
-    # file changes trigger a build, but if it did rebase these paths they would
-    # resolve to backend/backend/Dockerfile. Leaving it out makes the config
-    # correct under either reading, which matters more here than avoiding a
-    # rebuild on frontend-only commits.
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
+    # The Dockerfile lives at the repository root and the build context is the
+    # repository root, which is what Render uses by default. Anything else has
+    # to be kept in step with the dashboard settings of a service that was not
+    # created from this file -- which is exactly what broke four deploys.
+    dockerfilePath: ./Dockerfile
 
     # Render restarts the container if this stops answering. It does not touch
     # the database, so a database blip cannot cause a restart loop.
