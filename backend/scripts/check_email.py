@@ -79,6 +79,33 @@ def check_brevo(api_key: str, sender: str) -> bool:
     return True
 
 
+def recent_events(api_key: str, limit: int = 15) -> None:
+    """Show what the provider did with recent messages.
+
+    A successful API call means Brevo accepted the message, not that it
+    reached anyone. Delivery, bounce and spam outcomes only appear here.
+    """
+    r = httpx.get(
+        "https://api.brevo.com/v3/smtp/statistics/events",
+        headers={"api-key": api_key, "accept": "application/json"},
+        params={"limit": limit},
+        timeout=20,
+    )
+    if r.status_code != 200:
+        print(f"  could not read events (HTTP {r.status_code}): {r.text[:200]}")
+        return
+
+    events = r.json().get("events", [])
+    if not events:
+        print("  no events yet -- Brevo can take a minute to report them")
+        return
+
+    print(f"  {'WHEN':22} {'EVENT':12} {'TO'}")
+    for e in events:
+        when = str(e.get("date", ""))[:19].replace("T", " ")
+        print(f"  {when:22} {str(e.get('event', '')):12} {e.get('email', '')}")
+
+
 def main() -> int:
     s = get_settings()
     print(f"provider   : {s.email_provider}")
@@ -98,6 +125,10 @@ def main() -> int:
         return 1
 
     ok = check_brevo(s.brevo_api_key, s.email_from_address)
+
+    if "--recent" in sys.argv:
+        print("\nrecent delivery events:")
+        recent_events(s.brevo_api_key)
 
     if ok and len(sys.argv) == 3 and sys.argv[1] == "--send":
         target = sys.argv[2]
