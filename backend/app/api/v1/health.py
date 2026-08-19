@@ -12,6 +12,7 @@ from sqlalchemy import text
 from app.core.config import get_settings
 from app.db.session import engine
 from app.models import Base
+from app.services import email
 
 router = APIRouter()
 settings = get_settings()
@@ -97,7 +98,12 @@ async def diagnostics() -> dict[str, object]:
             "ai_provider": s.ai_provider or None,
             "gemini_api_key": present(s.gemini_api_key),
             "email_enabled": s.email_enabled,
-            "email_password": present(s.email_smtp_password),
+            # Which transport, and whether it can work here. "enabled" alone
+            # reported healthy for days while every send failed: SMTP is
+            # blocked outbound on Render's free plan.
+            "email_provider": s.email_provider,
+            "email_ready": email.is_configured(),
+            "email_status": email.configuration_hint(),
             "payment_upi": present(s.payment_upi_id),
         },
         "config_problems": problems or None,

@@ -88,14 +88,27 @@ class Settings(BaseSettings):
     google_client_id: str = ""
     google_client_secret: str = ""
 
-    # ---- Email (free via Gmail SMTP; needs a Google App Password) ----
+    # ---- Email ----
+    # "brevo" sends over HTTPS; "smtp" opens a direct SMTP connection.
+    #
+    # This is not a style preference. Render's free web services block outbound
+    # traffic on ports 25, 465 and 587, so SMTP fails there with
+    # "[Errno 101] Network is unreachable" however correct the Gmail App
+    # Password is. An HTTP API goes out over 443 and is unaffected.
+    email_provider: Literal["smtp", "brevo"] = "smtp"
+
     email_enabled: bool = False
+    email_from_address: str = ""
+    email_from_name: str = "SS Tuitions"
+
+    # Used when email_provider is "brevo".
+    brevo_api_key: str = ""
+
+    # Used when email_provider is "smtp" (fine locally, blocked on Render free).
     email_smtp_host: str = "smtp.gmail.com"
     email_smtp_port: int = 587
     email_smtp_user: str = ""
     email_smtp_password: str = ""
-    email_from_address: str = ""
-    email_from_name: str = "SS Tuitions"
 
     # ---- Payments (manual UPI/QR verification; no gateway) ----
     # Blank until the owner supplies them. Nothing is invented: the parent-facing
