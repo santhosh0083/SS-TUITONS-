@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { SelectField } from "@/components/ui/SelectField";
 import { TextField } from "@/components/ui/TextField";
+import { RemovePersonButton } from "@/components/app/RemovePersonButton";
 import { ApiError, apiFetch } from "@/lib/api";
 
 interface Student {
   id: string;
+  user_id: string;
   full_name: string;
   email: string;
   admission_no: string;
@@ -45,6 +47,7 @@ const GRADES = Array.from({ length: 12 }, (_, i) => ({
 
 export default function StudentsPage() {
   const [students, setStudents] = useState<Student[] | null>(null);
+  const [showRemoved, setShowRemoved] = useState(false);
   const [exams, setExams] = useState<Exam[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -69,7 +72,9 @@ export default function StudentsPage() {
     setForm((f) => ({ ...f, [k]: v }));
 
   const load = useCallback(() => {
-    apiFetch<Student[]>("/admin/students")
+    apiFetch<Student[]>(
+      `/admin/students${showRemoved ? "?include_removed=true" : ""}`,
+    )
       .then(setStudents)
       .catch((e) =>
         setLoadError(e instanceof ApiError ? e.message : "Could not load students."),
@@ -77,7 +82,7 @@ export default function StudentsPage() {
     apiFetch<Exam[]>("/admin/exams")
       .then(setExams)
       .catch(() => setExams([]));
-  }, []);
+  }, [showRemoved]);
 
   useEffect(load, [load]);
 
@@ -184,6 +189,9 @@ export default function StudentsPage() {
                 <th className="hidden px-5 py-3 font-semibold lg:table-cell">
                   Subjects
                 </th>
+                <th className="px-5 py-3 text-right font-semibold">
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-ink-200">
@@ -211,12 +219,30 @@ export default function StudentsPage() {
                   <td className="hidden px-5 py-4 text-ink-600 lg:table-cell">
                     {s.batches.length > 0 ? s.batches.join(", ") : "—"}
                   </td>
+                  <td className="px-5 py-4 text-right">
+                    <RemovePersonButton
+                      userId={s.user_id}
+                      fullName={s.full_name}
+                      removed={s.status === "suspended"}
+                      onDone={load}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+
+      <div className="mt-4 flex justify-end">
+        <button
+          type="button"
+          onClick={() => setShowRemoved((v) => !v)}
+          className="text-xs font-medium text-ink-500 underline-offset-4 hover:text-navy-700 hover:underline"
+        >
+          {showRemoved ? "Hide removed students" : "Show removed students"}
+        </button>
+      </div>
 
       {/* ---------- Add student ---------- */}
       <Modal

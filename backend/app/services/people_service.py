@@ -218,12 +218,17 @@ async def create_tutor(
     )
 
 
-async def list_tutors(session: AsyncSession) -> list[TutorSummary]:
-    rows = (
-        await session.execute(
-            select(Tutor, User).join(User, User.id == Tutor.user_id).order_by(User.full_name)
-        )
-    ).all()
+# Removed people are hidden by default. They are suspended rather than
+# deleted, so without this filter someone who left last term would sit in the
+# dashboard forever. include_removed brings them back into view so they can be
+# restored.
+async def list_tutors(
+    session: AsyncSession, *, include_removed: bool = False
+) -> list[TutorSummary]:
+    query = select(Tutor, User).join(User, User.id == Tutor.user_id)
+    if not include_removed:
+        query = query.where(User.status != UserStatus.SUSPENDED)
+    rows = (await session.execute(query.order_by(User.full_name))).all()
 
     summaries: list[TutorSummary] = []
     for tutor, user in rows:
@@ -250,6 +255,7 @@ async def list_tutors(session: AsyncSession) -> list[TutorSummary]:
         summaries.append(
             TutorSummary(
                 id=tutor.id,
+                user_id=user.id,
                 full_name=user.full_name,
                 email=user.email,
                 phone=user.phone,
@@ -309,12 +315,13 @@ async def create_parent(
     )
 
 
-async def list_parents(session: AsyncSession) -> list[ParentSummary]:
-    rows = (
-        await session.execute(
-            select(Parent, User).join(User, User.id == Parent.user_id).order_by(User.full_name)
-        )
-    ).all()
+async def list_parents(
+    session: AsyncSession, *, include_removed: bool = False
+) -> list[ParentSummary]:
+    query = select(Parent, User).join(User, User.id == Parent.user_id)
+    if not include_removed:
+        query = query.where(User.status != UserStatus.SUSPENDED)
+    rows = (await session.execute(query.order_by(User.full_name))).all()
 
     out: list[ParentSummary] = []
     for parent, user in rows:
@@ -329,6 +336,7 @@ async def list_parents(session: AsyncSession) -> list[ParentSummary]:
         out.append(
             ParentSummary(
                 id=parent.id,
+                user_id=user.id,
                 full_name=user.full_name,
                 email=user.email,
                 phone=user.phone,
@@ -418,14 +426,15 @@ async def create_student(
     )
 
 
-async def list_students(session: AsyncSession) -> list[StudentSummary]:
+async def list_students(
+    session: AsyncSession, *, include_removed: bool = False
+) -> list[StudentSummary]:
     from app.models.academics import Exam  # local import avoids a cycle
 
-    rows = (
-        await session.execute(
-            select(Student, User).join(User, User.id == Student.user_id).order_by(User.full_name)
-        )
-    ).all()
+    query = select(Student, User).join(User, User.id == Student.user_id)
+    if not include_removed:
+        query = query.where(User.status != UserStatus.SUSPENDED)
+    rows = (await session.execute(query.order_by(User.full_name))).all()
 
     out: list[StudentSummary] = []
     for student, user in rows:
@@ -460,6 +469,7 @@ async def list_students(session: AsyncSession) -> list[StudentSummary]:
         out.append(
             StudentSummary(
                 id=student.id,
+                user_id=user.id,
                 full_name=user.full_name,
                 email=user.email,
                 phone=user.phone,
@@ -474,3 +484,134 @@ async def list_students(session: AsyncSession) -> list[StudentSummary]:
             )
         )
     return out
+
+
+# ---------------------------------------------------------------------------
+# Removing someone who has left
+# ---------------------------------------------------------------------------
+
+
+async def remove_person(
+    session: AsyncSession, *, user_id: uuid.UUID, actor_id: uuid.UUID
+) -> str:
+    """Take someone off the dashboard when they stop using the service.
+
+    Their records are kept. A parent who leaves in March still paid fees in
+    January, and a tutor who leaves still taught the classes their students
+    were marked present for. Deleting the row would take that history with it
+    and leave invoices and attendance pointing at nothing, so the account is
+    suspended instead and hidden from the default lists.
+
+    Suspension is not only cosmetic. Access is re-checked on every request
+    rather than trusted from the JWT, so the three things that actually grant
+    it are withdrawn here:
+
+      * the account status, which blocks a fresh sign-in
+      * existing refresh tokens, so open sessions end rather than running to
+        expiry
+      * tutor assignments, which are THE authorization source for the tutor
+        role -- leaving them live would let a removed tutor keep reading their
+        students' data through any still-valid access token
+
+    Returns the person's name, for the confirmation message.
+    """
+    from sqlalchemy import update
+
+    from app.models.identity import RefreshToken
+
+    user = (
+        await session.execute(select(User).where(User.id == user_id))
+    ).scalar_one_or_none()
+    if user is None:
+        raise PeopleError("That account no longer exists")
+    if user.is_superadmin:
+        raise PeopleError("The owner's account cannot be removed")
+    if user.id == actor_id:
+        raise PeopleError("You cannot remove your own account")
+    if user.status == UserStatus.SUSPENDED:
+        raise PeopleError(f"{user.full_name} has already been removed")
+
+    user.status = UserStatus.SUSPENDED
+
+    await session.execute(
+        update(RefreshToken)
+        .where(RefreshToken.user_id == user.id, RefreshToken.revoked_at.is_(None))
+        .values(revoked_at=datetime.now(UTC))
+    )
+
+    today = date.today()
+    detail: dict[str, object] = {"status": UserStatus.SUSPENDED.value}
+
+    tutor = (
+        await session.execute(select(Tutor).where(Tutor.user_id == user.id))
+    ).scalar_one_or_none()
+    if tutor is not None:
+        revoked = await session.execute(
+            update(TutorAssignment)
+            .where(
+                TutorAssignment.tutor_id == tutor.id,
+                TutorAssignment.revoked_on.is_(None),
+            )
+            .values(revoked_on=today)
+        )
+        detail["assignments_revoked"] = revoked.rowcount
+
+    student = (
+        await session.execute(select(Student).where(Student.user_id == user.id))
+    ).scalar_one_or_none()
+    if student is not None:
+        left = await session.execute(
+            update(BatchStudent)
+            .where(
+                BatchStudent.student_id == student.id,
+                BatchStudent.status == EnrolmentStatus.ACTIVE,
+            )
+            .values(status=EnrolmentStatus.WITHDRAWN, left_on=today)
+        )
+        detail["enrolments_ended"] = left.rowcount
+
+    await audit.record(
+        session,
+        action="user.removed",
+        entity_type="user",
+        entity_id=user.id,
+        actor_user_id=actor_id,
+        before={"status": UserStatus.ACTIVE.value},
+        after=detail,
+    )
+    return user.full_name
+
+
+async def restore_person(
+    session: AsyncSession, *, user_id: uuid.UUID, actor_id: uuid.UUID
+) -> str:
+    """Undo a removal, for the case where someone comes back.
+
+    Deliberately restores only the ability to sign in. Revoked tutor
+    assignments and ended enrolments stay as they are, because a returning
+    tutor may teach a different batch and a returning student may join a
+    different one. Silently reinstating the old ones would hand back access to
+    students they are no longer responsible for.
+    """
+    user = (
+        await session.execute(select(User).where(User.id == user_id))
+    ).scalar_one_or_none()
+    if user is None:
+        raise PeopleError("That account no longer exists")
+    if user.status != UserStatus.SUSPENDED:
+        raise PeopleError(f"{user.full_name} is not removed")
+
+    user.status = UserStatus.ACTIVE
+    user.failed_login_count = 0
+    user.locked_until = None
+
+    await audit.record(
+        session,
+        action="user.restored",
+        entity_type="user",
+        entity_id=user.id,
+        actor_user_id=actor_id,
+        before={"status": UserStatus.SUSPENDED.value},
+        after={"status": UserStatus.ACTIVE.value, "assignments_restored": False},
+    )
+    return user.full_name

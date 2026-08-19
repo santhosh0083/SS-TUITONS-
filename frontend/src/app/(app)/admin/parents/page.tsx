@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
+import { RemovePersonButton } from "@/components/app/RemovePersonButton";
 import { ApiError, apiFetch } from "@/lib/api";
 
 interface Parent {
   id: string;
+  user_id: string;
   full_name: string;
   email: string;
   phone: string | null;
@@ -16,14 +18,19 @@ interface Parent {
 export default function ParentsPage() {
   const [parents, setParents] = useState<Parent[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showRemoved, setShowRemoved] = useState(false);
 
-  useEffect(() => {
-    apiFetch<Parent[]>("/admin/parents")
+  const load = useCallback(() => {
+    apiFetch<Parent[]>(
+      `/admin/parents${showRemoved ? "?include_removed=true" : ""}`,
+    )
       .then(setParents)
       .catch((e) =>
         setError(e instanceof ApiError ? e.message : "Could not load parents."),
       );
-  }, []);
+  }, [showRemoved]);
+
+  useEffect(load, [load]);
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -76,6 +83,9 @@ export default function ParentsPage() {
                 <th className="hidden px-5 py-3 font-semibold sm:table-cell">
                   Phone
                 </th>
+                <th className="px-5 py-3 text-right font-semibold">
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-ink-200">
@@ -91,12 +101,30 @@ export default function ParentsPage() {
                   <td className="hidden px-5 py-4 text-ink-600 sm:table-cell">
                     {p.phone ?? "—"}
                   </td>
+                  <td className="px-5 py-4 text-right">
+                    <RemovePersonButton
+                      userId={p.user_id}
+                      fullName={p.full_name}
+                      removed={p.status === "suspended"}
+                      onDone={load}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+
+      <div className="mt-4 flex justify-end">
+        <button
+          type="button"
+          onClick={() => setShowRemoved((v) => !v)}
+          className="text-xs font-medium text-ink-500 underline-offset-4 hover:text-navy-700 hover:underline"
+        >
+          {showRemoved ? "Hide removed parents" : "Show removed parents"}
+        </button>
+      </div>
     </div>
   );
 }

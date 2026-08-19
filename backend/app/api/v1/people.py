@@ -36,8 +36,10 @@ def _bad_request(exc: PeopleError) -> HTTPException:
 
 
 @router.get("/tutors", response_model=list[TutorSummary])
-async def list_tutors(session: Db, _admin: AdminUser) -> list[TutorSummary]:
-    return await people_service.list_tutors(session)
+async def list_tutors(
+    session: Db, _admin: AdminUser, include_removed: bool = False
+) -> list[TutorSummary]:
+    return await people_service.list_tutors(session, include_removed=include_removed)
 
 
 @router.post(
@@ -65,8 +67,10 @@ async def create_tutor(
 
 
 @router.get("/parents", response_model=list[ParentSummary])
-async def list_parents(session: Db, _admin: AdminUser) -> list[ParentSummary]:
-    return await people_service.list_parents(session)
+async def list_parents(
+    session: Db, _admin: AdminUser, include_removed: bool = False
+) -> list[ParentSummary]:
+    return await people_service.list_parents(session, include_removed=include_removed)
 
 
 @router.post(
@@ -89,8 +93,10 @@ async def create_parent(
 
 
 @router.get("/students", response_model=list[StudentSummary])
-async def list_students(session: Db, _admin: AdminUser) -> list[StudentSummary]:
-    return await people_service.list_students(session)
+async def list_students(
+    session: Db, _admin: AdminUser, include_removed: bool = False
+) -> list[StudentSummary]:
+    return await people_service.list_students(session, include_removed=include_removed)
 
 
 @router.post(
@@ -158,19 +164,57 @@ async def reset_password(user_id: uuid.UUID, session: Db, admin: AdminUser) -> d
     return {"full_name": full_name, "email": email, "temporary_password": password}
 
 
+@router.post("/users/{user_id}/remove", response_model=dict)
+async def remove_user(user_id: uuid.UUID, session: Db, admin: AdminUser) -> dict:
+    """Take a student, parent or tutor off the dashboard when they leave.
+
+    Not a delete. Fee records, attendance and past classes reference these
+    people, and removing the row would leave that history pointing at nothing
+    -- a parent who leaves in March still paid in January. The account is
+    suspended, hidden from the default lists, signed out, and stripped of the
+    assignments that grant access.
+    """
+    try:
+        full_name = await people_service.remove_person(
+            session, user_id=user_id, actor_id=admin.id
+        )
+    except PeopleError as exc:
+        raise _bad_request(exc) from exc
+    await session.commit()
+    return {"full_name": full_name, "removed": True}
+
+
+@router.post("/users/{user_id}/restore", response_model=dict)
+async def restore_user(user_id: uuid.UUID, session: Db, admin: AdminUser) -> dict:
+    """Bring someone back after a removal.
+
+    Restores sign-in only. Revoked tutor assignments and ended enrolments are
+    left alone, because a returning tutor may teach a different batch and
+    reinstating the old ones would hand back access to students they are no
+    longer responsible for.
+    """
+    try:
+        full_name = await people_service.restore_person(
+            session, user_id=user_id, actor_id=admin.id
+        )
+    except PeopleError as exc:
+        raise _bad_request(exc) from exc
+    await session.commit()
+    return {"full_name": full_name, "removed": False}
+
+
 @router.delete("/students/{student_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def not_implemented_delete(student_id: uuid.UUID) -> None:
     """Deliberately not implemented.
 
-    Deleting a student would cascade away their attendance, test attempts and
-    payment history. Suspending the account is almost always what is wanted,
-    and a real deletion path needs a data-retention decision first
-    (docs/INTAKE.md Group J).
+    A hard delete would cascade away attendance, test attempts and payment
+    history. Use POST /admin/users/{user_id}/remove, which suspends the
+    account and keeps the records.
     """
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail=(
-            "Students are suspended rather than deleted, so attendance, test "
-            "and payment history is preserved."
+            "Students are removed rather than deleted, so attendance, test and "
+            "payment history is preserved. Use the Remove action instead."
         ),
     )

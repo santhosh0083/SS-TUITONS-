@@ -43,7 +43,11 @@ class TutorCreate(BaseModel):
 class TutorSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    # The profile row id (tutors/parents/students) and the sign-in account
+    # id are different. Account actions -- removal, password reset -- key on
+    # user_id, so it has to be on the wire or the UI cannot call them.
     id: uuid.UUID
+    user_id: uuid.UUID
     full_name: str
     email: EmailStr
     phone: str | None
@@ -93,7 +97,11 @@ class StudentCreated(PersonCreated):
 class StudentSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    # The profile row id (tutors/parents/students) and the sign-in account
+    # id are different. Account actions -- removal, password reset -- key on
+    # user_id, so it has to be on the wire or the UI cannot call them.
     id: uuid.UUID
+    user_id: uuid.UUID
     full_name: str
     email: EmailStr
     phone: str | None
@@ -122,7 +130,11 @@ class ParentCreate(BaseModel):
 class ParentSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    # The profile row id (tutors/parents/students) and the sign-in account
+    # id are different. Account actions -- removal, password reset -- key on
+    # user_id, so it has to be on the wire or the UI cannot call them.
     id: uuid.UUID
+    user_id: uuid.UUID
     full_name: str
     email: EmailStr
     phone: str | None

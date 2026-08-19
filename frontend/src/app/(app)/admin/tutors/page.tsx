@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { CredentialsPanel } from "@/components/app/CredentialsPanel";
+import { RemovePersonButton } from "@/components/app/RemovePersonButton";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { TextField } from "@/components/ui/TextField";
@@ -10,6 +11,7 @@ import { ApiError, apiFetch } from "@/lib/api";
 
 interface Tutor {
   id: string;
+  user_id: string;
   full_name: string;
   email: string;
   phone: string | null;
@@ -30,6 +32,7 @@ interface Created {
 export default function TutorsPage() {
   const [tutors, setTutors] = useState<Tutor[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [showRemoved, setShowRemoved] = useState(false);
 
   const [formOpen, setFormOpen] = useState(false);
   const [created, setCreated] = useState<Created | null>(null);
@@ -43,12 +46,14 @@ export default function TutorsPage() {
   const [formError, setFormError] = useState<string | null>(null);
 
   const load = useCallback(() => {
-    apiFetch<Tutor[]>("/admin/tutors")
+    apiFetch<Tutor[]>(
+      `/admin/tutors${showRemoved ? "?include_removed=true" : ""}`,
+    )
       .then(setTutors)
       .catch((e) =>
         setLoadError(e instanceof ApiError ? e.message : "Could not load tutors."),
       );
-  }, []);
+  }, [showRemoved]);
 
   useEffect(load, [load]);
 
@@ -164,6 +169,9 @@ export default function TutorsPage() {
                 </th>
                 <th className="px-5 py-3 text-right font-semibold">Batches</th>
                 <th className="px-5 py-3 text-right font-semibold">Students</th>
+                <th className="px-5 py-3 text-right font-semibold">
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-ink-200">
@@ -192,6 +200,14 @@ export default function TutorsPage() {
                   <td className="px-5 py-4 text-right tabular-nums text-ink-700">
                     {t.students_reached}
                   </td>
+                  <td className="px-5 py-4 text-right">
+                    <RemovePersonButton
+                      userId={t.user_id}
+                      fullName={t.full_name}
+                      removed={t.status === "suspended"}
+                      onDone={load}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -199,11 +215,22 @@ export default function TutorsPage() {
         </div>
       )}
 
-      {tutors && tutors.length > 0 && (
-        <p className="mt-4 text-xs text-ink-400">
-          Tutor contact details are hidden from students and parents.
-        </p>
-      )}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        {tutors && tutors.length > 0 ? (
+          <p className="text-xs text-ink-400">
+            Tutor contact details are hidden from students and parents.
+          </p>
+        ) : (
+          <span />
+        )}
+        <button
+          type="button"
+          onClick={() => setShowRemoved((v) => !v)}
+          className="text-xs font-medium text-ink-500 underline-offset-4 hover:text-navy-700 hover:underline"
+        >
+          {showRemoved ? "Hide removed tutors" : "Show removed tutors"}
+        </button>
+      </div>
 
       {/* ---------- Add tutor ---------- */}
       <Modal
