@@ -21,9 +21,11 @@ services:
     # dockerfilePath to ./Dockerfile on the assumption that rootDir rebased it,
     # which pointed at a file that does not exist at the root.
     #
-    # rootDir only limits which file changes trigger a build; it does not move
-    # these paths.
-    rootDir: backend
+    # rootDir is deliberately NOT set. It is documented to affect only which
+    # file changes trigger a build, but if it did rebase these paths they would
+    # resolve to backend/backend/Dockerfile. Leaving it out makes the config
+    # correct under either reading, which matters more here than avoiding a
+    # rebuild on frontend-only commits.
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
 
