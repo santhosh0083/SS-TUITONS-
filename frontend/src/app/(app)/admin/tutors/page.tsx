@@ -6,6 +6,7 @@ import { CredentialsPanel } from "@/components/app/CredentialsPanel";
 import { RemovePersonButton } from "@/components/app/RemovePersonButton";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { table } from "@/components/ui/responsiveTable";
 import { TextField } from "@/components/ui/TextField";
 import { ApiError, apiFetch } from "@/lib/api";
 
@@ -159,9 +160,9 @@ export default function TutorsPage() {
 
       {/* List */}
       {tutors && tutors.length > 0 && (
-        <div className="mt-8 overflow-hidden rounded-xl border border-ink-200 bg-white shadow-[var(--shadow-card)]">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-ink-200 bg-ink-50">
+        <div className={table.wrapper}>
+          <table className={table.root}>
+            <thead className={table.head}>
               <tr className="text-xs uppercase tracking-wider text-ink-500">
                 <th className="px-5 py-3 font-semibold">Tutor</th>
                 <th className="hidden px-5 py-3 font-semibold sm:table-cell">
@@ -174,10 +175,10 @@ export default function TutorsPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-ink-200">
+            <tbody className={table.body}>
               {tutors.map((t) => (
-                <tr key={t.id} className="transition-colors hover:bg-ink-50">
-                  <td className="px-5 py-4">
+                <tr key={t.id} className={table.row}>
+                  <td className={table.cellPrimary}>
                     <div className="font-medium text-ink-900">{t.full_name}</div>
                     <div className="text-xs text-ink-500">{t.email}</div>
                     {t.status !== "active" && (
@@ -186,21 +187,21 @@ export default function TutorsPage() {
                       </span>
                     )}
                   </td>
-                  <td className="hidden px-5 py-4 text-ink-600 sm:table-cell">
-                    {t.qualification ?? "—"}
+                  <td className={table.cell} data-label="Qualification">
+                    <span className="text-ink-600">{t.qualification ?? "—"}</span>
                     {t.experience_years != null && (
                       <span className="block text-xs text-ink-500">
                         {t.experience_years} yr experience
                       </span>
                     )}
                   </td>
-                  <td className="px-5 py-4 text-right tabular-nums text-ink-700">
+                  <td className={table.cellNumeric} data-label="Batches">
                     {t.batches_assigned}
                   </td>
-                  <td className="px-5 py-4 text-right tabular-nums text-ink-700">
+                  <td className={table.cellNumeric} data-label="Students">
                     {t.students_reached}
                   </td>
-                  <td className="px-5 py-4 text-right">
+                  <td className={table.cellAction}>
                     <RemovePersonButton
                       userId={t.user_id}
                       fullName={t.full_name}

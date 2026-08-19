@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { RemovePersonButton } from "@/components/app/RemovePersonButton";
+import { table } from "@/components/ui/responsiveTable";
 import { ApiError, apiFetch } from "@/lib/api";
 
 interface Parent {
@@ -74,9 +75,9 @@ export default function ParentsPage() {
       )}
 
       {parents && parents.length > 0 && (
-        <div className="mt-8 overflow-x-auto rounded-xl border border-ink-200 bg-white shadow-[var(--shadow-card)]">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-ink-200 bg-ink-50">
+        <div className={table.wrapper}>
+          <table className={table.root}>
+            <thead className={table.head}>
               <tr className="text-xs uppercase tracking-wider text-ink-500">
                 <th className="px-5 py-3 font-semibold">Parent</th>
                 <th className="px-5 py-3 font-semibold">Children</th>
@@ -88,20 +89,20 @@ export default function ParentsPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-ink-200">
+            <tbody className={table.body}>
               {parents.map((p) => (
-                <tr key={p.id} className="transition-colors hover:bg-ink-50">
-                  <td className="px-5 py-4">
+                <tr key={p.id} className={table.row}>
+                  <td className={table.cellPrimary}>
                     <div className="font-medium text-ink-900">{p.full_name}</div>
                     <div className="text-xs text-ink-500">{p.email}</div>
                   </td>
-                  <td className="px-5 py-4 text-ink-700">
-                    {p.children.length > 0 ? p.children.join(", ") : "—"}
+                  <td className={table.cell} data-label="Children">
+                    <span>{p.children.length > 0 ? p.children.join(", ") : "—"}</span>
                   </td>
-                  <td className="hidden px-5 py-4 text-ink-600 sm:table-cell">
-                    {p.phone ?? "—"}
+                  <td className={table.cell} data-label="Phone">
+                    <span className="text-ink-600">{p.phone ?? "—"}</span>
                   </td>
-                  <td className="px-5 py-4 text-right">
+                  <td className={table.cellAction}>
                     <RemovePersonButton
                       userId={p.user_id}
                       fullName={p.full_name}

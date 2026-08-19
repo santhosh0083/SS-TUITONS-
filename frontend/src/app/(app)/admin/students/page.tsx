@@ -8,6 +8,7 @@ import { Modal } from "@/components/ui/Modal";
 import { SelectField } from "@/components/ui/SelectField";
 import { TextField } from "@/components/ui/TextField";
 import { RemovePersonButton } from "@/components/app/RemovePersonButton";
+import { table } from "@/components/ui/responsiveTable";
 import { ApiError, apiFetch } from "@/lib/api";
 
 interface Student {
@@ -177,9 +178,9 @@ export default function StudentsPage() {
       )}
 
       {students && students.length > 0 && (
-        <div className="mt-8 overflow-x-auto rounded-xl border border-ink-200 bg-white shadow-[var(--shadow-card)]">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-ink-200 bg-ink-50">
+        <div className={table.wrapper}>
+          <table className={table.root}>
+            <thead className={table.head}>
               <tr className="text-xs uppercase tracking-wider text-ink-500">
                 <th className="px-5 py-3 font-semibold">Student</th>
                 <th className="px-5 py-3 font-semibold">Grade</th>
@@ -194,32 +195,36 @@ export default function StudentsPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-ink-200">
+            <tbody className={table.body}>
               {students.map((s) => (
-                <tr key={s.id} className="transition-colors hover:bg-ink-50">
-                  <td className="px-5 py-4">
+                <tr key={s.id} className={table.row}>
+                  <td className={table.cellPrimary}>
                     <div className="font-medium text-ink-900">{s.full_name}</div>
                     <div className="text-xs text-ink-500">{s.admission_no}</div>
                   </td>
-                  <td className="px-5 py-4 text-ink-700">
+                  <td className={table.cell} data-label="Grade">
+                    <span>
                     Grade {s.grade}
                     {s.target_exam && (
                       <span className="block text-xs text-ink-500">
                         {s.target_exam}
                       </span>
                     )}
+                    </span>
                   </td>
-                  <td className="hidden px-5 py-4 text-ink-600 md:table-cell">
+                  <td className={table.cell} data-label="Parent">
                     {s.parents.length > 0 ? (
-                      s.parents.join(", ")
+                      <span className="text-ink-600">{s.parents.join(", ")}</span>
                     ) : (
                       <span className="text-warning-700">No parent linked</span>
                     )}
                   </td>
-                  <td className="hidden px-5 py-4 text-ink-600 lg:table-cell">
-                    {s.batches.length > 0 ? s.batches.join(", ") : "—"}
+                  <td className={table.cell} data-label="Subjects">
+                    <span className="text-ink-600">
+                      {s.batches.length > 0 ? s.batches.join(", ") : "—"}
+                    </span>
                   </td>
-                  <td className="px-5 py-4 text-right">
+                  <td className={table.cellAction}>
                     <RemovePersonButton
                       userId={s.user_id}
                       fullName={s.full_name}
