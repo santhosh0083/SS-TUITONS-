@@ -14,8 +14,16 @@
  *    log the user out of every device.
  */
 
+// The deployed API. This is the default rather than something that must be
+// configured per environment, because a missing NEXT_PUBLIC_ variable fails
+// silently: the build succeeds and every request then goes to localhost,
+// which does not exist for a visitor. The URL is public, so there is nothing
+// to protect by keeping it out of the repository.
+//
+// Local development overrides it in frontend/.env.local, which is gitignored.
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000/api/v1";
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  "https://ss-tuitons-1.onrender.com/api/v1";
 
 let accessToken: string | null = null;
 let refreshPromise: Promise<boolean> | null = null;
