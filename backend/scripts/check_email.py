@@ -57,8 +57,19 @@ def check_brevo(api_key: str, sender: str) -> bool:
     match = next((s for s in senders if s.get("email", "").lower() == sender.lower()), None)
     if match is None:
         print(f"  FAIL  {sender} is not a sender on this account.")
-        print("        Add it under Senders, Domains & Dedicated IPs, then click")
-        print("        the confirmation link Brevo emails to that address.")
+        if senders:
+            # Usually one already exists -- Brevo creates it from the signup
+            # address -- and pointing EMAIL_FROM_ADDRESS at it is quicker than
+            # verifying another.
+            print("        Senders that do exist on this account:")
+            for item in senders:
+                state = "verified" if item.get("active") else "NOT verified"
+                print(f"          {item.get('email', '?'):36} {state}")
+        else:
+            print("        This account has no senders at all.")
+        print("        Either set EMAIL_FROM_ADDRESS to a verified one above, or")
+        print("        add this address under Senders, Domains & Dedicated IPs")
+        print("        and click the confirmation link Brevo emails to it.")
         return False
     if not match.get("active", False):
         print(f"  FAIL  {sender} exists but is not verified yet.")
