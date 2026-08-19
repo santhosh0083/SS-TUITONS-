@@ -18,7 +18,11 @@ from sqlalchemy import create_engine, text
 
 from app.core.config import get_settings
 
-BASE = "http://127.0.0.1:8000/api/v1"
+# Defaults to a local server. Point it at the deployed API to verify what is
+# actually serving users, which is the only environment that counts:
+#
+#   $env:SS_VERIFY_BASE_URL = "https://ss-tuitons-1.onrender.com/api/v1"
+BASE = os.environ.get("SS_VERIFY_BASE_URL", "http://127.0.0.1:8000/api/v1").rstrip("/")
 TAG = "qa-verify"
 # Owner credentials come from the environment, never the source. Hardcoding
 # them here put the password into git history once already.

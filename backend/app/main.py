@@ -1,9 +1,9 @@
 """FastAPI application entrypoint."""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.errors import register_exception_handlers
@@ -32,16 +32,43 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await engine.dispose()
 
 
+# The interactive docs enumerate every route, parameter and schema -- a map of
+# the whole API, admin surface included. This one serves data about children,
+# so it is not published. Off in production, on everywhere else.
+_docs_enabled = not settings.is_production
+
 app = FastAPI(
     title="SS Tuitions API",
-    description=(
-        "Backend for the SS Tuitions tutoring platform.\n\n"
-        "**Status:** Phase 1 — database schema and permission layer complete. "
-        "Authentication endpoints are next."
-    ),
-    version="0.1.0",
+    description="Backend for the SS Tuitions tutoring platform.",
+    version="1.0.0",
     lifespan=lifespan,
+    docs_url="/docs" if _docs_enabled else None,
+    redoc_url="/redoc" if _docs_enabled else None,
+    openapi_url="/openapi.json" if _docs_enabled else None,
 )
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next: Callable) -> Response:
+    """Add response headers that browsers act on.
+
+    FORCE_HTTPS was required by assert_production_safe but read by nothing, so
+    it asserted a guarantee the app never made. HSTS is what makes it real:
+    once seen, the browser refuses to talk to this host over plain HTTP at
+    all, closing the downgrade window from the first request onward.
+
+    No HTTPS redirect is added here. The host terminates TLS and redirects at
+    its edge already, and a second redirect driven by a misread
+    X-Forwarded-Proto is how you get an infinite loop.
+    """
+    response: Response = await call_next(request)
+    if settings.force_https:
+        response.headers.setdefault(
+            "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
+        )
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    return response
 
 app.add_middleware(
     CORSMiddleware,
