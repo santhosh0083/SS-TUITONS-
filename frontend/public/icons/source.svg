@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="SS Tuitions">
+  <!-- Brand navy and gold, matching the wordmark on the site. -->
+  <rect width="512" height="512" fill="#14213d"/>
+  <rect x="146" y="352" width="220" height="18" rx="9" fill="#e5a33a"/>
+  <text x="256" y="310" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="220" font-weight="700" fill="#ffffff" letter-spacing="-6">SS</text>
+</svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="SS Tuitions">
+  <!-- Android crops maskable icons to a circle, so the artwork stays inside
+       a centred safe zone of about 80 percent. -->
+  <rect width="512" height="512" fill="#14213d"/>
+  <rect x="176" y="326" width="160" height="14" rx="7" fill="#e5a33a"/>
+  <text x="256" y="296" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="160" font-weight="700" fill="#ffffff" letter-spacing="-4">SS</text>
+</svg>
