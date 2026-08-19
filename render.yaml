@@ -15,11 +15,17 @@ services:
     branch: main
     region: singapore
     plan: free
-    # rootDir makes every other path relative to backend/, which is where the
-    # Dockerfile and application live. Setting dockerContext instead caused
-    # Render to look for backend/backend/Dockerfile and fail.
+    # Both of these are relative to the REPOSITORY ROOT, not to rootDir --
+    # Render's blueprint spec is explicit about it: "The path to the service's
+    # Dockerfile, relative to the repo root." An earlier attempt set
+    # dockerfilePath to ./Dockerfile on the assumption that rootDir rebased it,
+    # which pointed at a file that does not exist at the root.
+    #
+    # rootDir only limits which file changes trigger a build; it does not move
+    # these paths.
     rootDir: backend
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
 
     # Render restarts the container if this stops answering. It does not touch
     # the database, so a database blip cannot cause a restart loop.
